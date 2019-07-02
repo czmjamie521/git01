@@ -1,0 +1,44 @@
+package com.sxt.course;
+
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import com.sxt.service.CommentService;
+import com.sxt.comment.CourseComment;
+
+import com.sxt.util.ResultInfo;
+import com.sxt.util.User;
+import com.util.JsonUtil;
+
+/**
+ * Servlet implementation class CommentServlet
+ */
+@WebServlet("/commentservlet")
+public class CommentServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	CommentService CommentService=new CommentService();
+	/**
+	 * @see HttpServlet#service(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String actionName=request.getParameter("actionName");
+		System.out.println(actionName);
+		if("commentSubmit".equals(actionName)){
+			commentSubmit(request,response);
+		}
+	}
+
+	private void commentSubmit(HttpServletRequest request, HttpServletResponse response) throws IOException {
+			String comment=request.getParameter("comment");
+			String courseid=request.getParameter("courseid");
+			String	commentid=request.getParameter("commentid");
+			User user=(User) request.getSession().getAttribute("user");
+			ResultInfo<CourseComment> ResultInfo=CommentService.addComment(comment,commentid,user,courseid);
+			JsonUtil.toJson(response, ResultInfo);
+		
+	}
+
+}

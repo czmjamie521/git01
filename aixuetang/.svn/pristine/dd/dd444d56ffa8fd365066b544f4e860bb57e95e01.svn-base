@@ -1,0 +1,60 @@
+package com.sxt.order.domain;
+
+import java.util.Date;
+import java.util.List;
+
+import com.po.Address;
+import com.sxt.util.User;
+
+public class Order {
+	private String orderid;		//主键, 订单号
+	private Date ordertime;		//下单时间
+	private Integer status;		//订单状态, 1表示未支付, 2表示已支付
+	private Double total;	//订单总价
+	private User user;			//对应的用户
+	private Address address;	//收货地址
+	private List<OrderItem> orderitemlist;	//含有的所有订单条目
+	
+	public String getOrderid() {
+		return orderid;
+	}
+	public void setOrderid(String orderid) {
+		this.orderid = orderid;
+	}
+	public Date getOrdertime() {
+		return ordertime;
+	}
+	public void setOrdertime(Date ordertime) {
+		this.ordertime = ordertime;
+	}
+	public Integer getStatus() {
+		return status;
+	}
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
+	public Double getTotal() {
+		return total;
+	}
+	public void setTotal(Double total) {
+		this.total = total;
+	}
+	public User getUser() {
+		return user;
+	}
+	public void setUser(User user) {
+		this.user = user;
+	}
+	public Address getAddress() {
+		return address;
+	}
+	public void setAddress(Address address) {
+		this.address = address;
+	}
+	public List<OrderItem> getOrderitemlist() {
+		return orderitemlist;
+	}
+	public void setOrderitemlist(List<OrderItem> orderitemlist) {
+		this.orderitemlist = orderitemlist;
+	}
+}

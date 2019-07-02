@@ -1,0 +1,14 @@
+package com.sxt.order.test;
+
+import cn.itcast.commons.CommonUtils;
+
+public class TestU {
+	public static void main(String[] args) {
+		System.out.println(CommonUtils.uuid());
+		System.out.println(CommonUtils.uuid());
+		System.out.println(CommonUtils.uuid());
+		System.out.println(CommonUtils.uuid());
+		System.out.println(CommonUtils.uuid());
+		System.out.println(CommonUtils.uuid());
+	}
+}

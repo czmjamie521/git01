@@ -1,0 +1,17 @@
+package com.sxt.service;
+
+import java.util.List;
+
+import com.sxt.model.Course;
+
+public class CourseService {
+    Dao Dao=new Dao();
+	public List<Course> findCourselist() {
+		Dao.listCourse();
+		
+		return null;
+		// TODO Auto-generated method stub
+		
+	}
+
+}

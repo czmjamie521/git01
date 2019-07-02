@@ -1,0 +1,130 @@
+package com.address.service;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import com.address.dao.AddressDao;
+import com.address.po.Address;
+import com.sxt.util.ResultInfo;
+import com.util.StringUtil;
+
+
+public class AddressService {
+	private AddressDao addressDao = new AddressDao();
+	public ResultInfo<List<Address>> findAddress(Integer uid) {
+		List<Address> list = addressDao.findListByUserId(uid);
+		ResultInfo<List<Address>> resultInfo = new ResultInfo<>();
+		//锟叫断非匡拷
+		if(list==null||list.size()<1){
+			//锟斤拷锟轿拷锟�
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟矫伙拷锟叫憋拷锟斤拷锟斤拷");
+		}else{
+			//锟斤拷锟斤拷锟轿拷锟�
+			resultInfo.setCode(1);
+			resultInfo.setResult(list);
+		}
+		
+		return resultInfo;
+	}
+	
+	
+	/*
+	 * address.jsp 点击删除地址, 使用此方法
+	 * 1  规则 当地址中只存在一条地址, 则允许删除
+	 * 2 当地址中多于一条地址  且删除的是默认地址, 提示用户不能删除, 需要指定其他地址为默认
+	 */
+	public ResultInfo<Address> deleteAddress(String aid, Integer uid) {
+		ResultInfo<Address> resultInfo = new ResultInfo<>();
+		if(StringUtil.isEmpty(aid)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("未成功删除");
+			return resultInfo;
+		}
+		
+		//验证aid是否对应默认地址
+		try {
+			Address address = addressDao.findAddressById(aid);
+			if(address.getIsdefault() ==1){
+				//当地址为默认, 需要判断当前有几条记录
+				Integer records =addressDao.findListByUserId(uid).size();
+				//当 记录数大于 1, 删除不成功, 提示失败信息
+				if(records >1){
+					resultInfo.setCode(0);
+					resultInfo.setMsg("请先设置其他地址为默认, 再删除!");
+					return resultInfo;
+				}
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+		
+		int row=addressDao.deleteAddress(aid);
+		if(row>0){
+			resultInfo.setCode(1);
+			resultInfo.setMsg("删除成功!");
+			
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("删除失败!");
+		}
+		return resultInfo;
+	}
+	
+	/*
+	 * 添加地址时调用, 验证地址唯一
+	 */
+	public ResultInfo<Address> checkaddress(  Integer uid,String address,String aid) {
+		ResultInfo<Address> resultInfo=new ResultInfo<>();
+		if(StringUtil.isEmpty(address)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("添加错误!");
+			return resultInfo;
+		}
+		
+		Address addr=addressDao.checkaddress(address,uid,aid);
+		if(addr ==null){
+			resultInfo.setCode(1);
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("重复的地址!");
+		}
+		
+		return resultInfo;
+	}
+	/*
+	 * 锟斤拷踊锟斤拷薷锟�
+	 */
+	public ResultInfo<Address> addorupdate(String address, String aid, String isdefault, Integer uid) {
+		ResultInfo<Address> resultInfo=new ResultInfo<>();
+		if(StringUtil.isEmpty(address)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟斤拷址锟斤拷锟斤拷为锟斤拷!");
+			return resultInfo;
+		}
+		//锟斤拷证锟斤拷址唯一
+		ResultInfo<Address> res=checkaddress(uid,address,aid);
+		if(res.getCode()== 0){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟斤拷址锟斤拷锟斤拷锟截革拷");
+			return resultInfo;
+		}
+		//锟斤拷锟斤拷Dao锟姐方锟斤拷
+		int row=addressDao.addorupdate(address,aid,isdefault,uid);
+		//锟叫讹拷锟斤拷影锟斤拷锟斤拷锟斤拷锟�
+		if(row>0){
+			resultInfo.setCode(1);
+			if(StringUtil.isEmpty(aid)){
+				Address note=addressDao.checkaddress(address,uid ,aid);
+				resultInfo.setResult(note);
+			}
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟斤拷址锟斤拷锟斤拷失锟斤拷");
+		}
+		return resultInfo;
+	}
+
+
+}

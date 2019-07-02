@@ -1,0 +1,67 @@
+package com.sxt.cartitem.dao;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.MapListHandler;
+
+import com.sxt.cartitem.domain.CartItem;
+import com.sxt.model.Course;
+import com.sxt.util.DBUtil;
+
+import cn.itcast.commons.CommonUtils;
+
+/**
+ * 购物车持久层
+ * @author robbyzhan
+ *
+ */
+public class CartDao {
+	QueryRunner qr =new QueryRunner();
+	Connection conn =DBUtil.getConnection();
+	
+	/**
+	 * 把对应单行结果集的Map, 映射到相应的JavaBean中, 使得CartItem包含完整课程信息
+	 * @param map
+	 * @return
+	 */
+	private CartItem toCartItem(Map<String, Object> map){
+		if(null ==map || map.size() ==0) return null;
+		
+		CartItem cartItem =CommonUtils.toBean(map, CartItem.class);
+		Course course =CommonUtils.toBean(map, Course.class);
+		cartItem.setCourse(course);
+		return cartItem;
+	}
+	
+	/**
+	 * 把对应多行结果集的 mapList, 映射到相应的 List<Bean>中, 使得每个Bean包含完整课程信息
+	 * @param mapList
+	 * @return
+	 */
+	private List<CartItem> toCartItemList(List<Map<String, Object>> mapList){
+		List<CartItem> cartItemList =new ArrayList<>();
+		for(Map<String, Object> map: mapList){
+			CartItem c =toCartItem(map);
+			cartItemList.add(c);
+		}
+		return cartItemList;
+	}
+	/**
+	 * 前台点击显示购物车
+	 * @param uid   当前用户的id
+	 * @return
+	 * @throws SQLException 
+	 */
+	public List<CartItem> showCart(Integer uid) throws SQLException {
+		String sql ="select cart.cartitemid, cart.quantity, cart.subtotal, course.* "+ 
+				"from t_cartitem cart LEFT JOIN t_course course on cart.courseid =course.courseid "+
+				"where uid =?";	
+		List<Map<String, Object>> mapList =qr.query(conn, sql, new MapListHandler(), uid);
+		return toCartItemList(mapList);
+	}
+}

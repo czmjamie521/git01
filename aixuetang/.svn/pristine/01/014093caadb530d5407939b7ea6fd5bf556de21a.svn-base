@@ -1,0 +1,396 @@
+package com.sxt.order.web.servlet;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.address.po.Address;
+import com.aixuetang.po.vo.ResultInfo;
+import com.aixuetang.until.JsonUtil;
+import com.shsxt.userdao.UserDao;
+import com.sxt.cartitem.domain.CartItem;
+import com.sxt.cartitem.service.CartService;
+import com.sxt.order.domain.Order;
+import com.sxt.order.domain.OrderItem;
+import com.sxt.order.exception.OrderException;
+import com.sxt.order.exception.PayException;
+import com.sxt.order.page.Page;
+import com.sxt.order.service.OrderService;
+import com.sxt.util.StringUtil;
+import com.sxt.util.User;
+
+import cn.itcast.commons.CommonUtils;
+
+@WebServlet("/order")
+public class OrderServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	private OrderService orderService =new OrderService();
+	private CartService cartService =new CartService();
+	
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String actionName =request.getParameter("actionName");
+		switch(actionName){
+		case "showOrder":
+			showOrder(request, response);
+			break;
+		case "addOrder":
+			addOrder(request, response);
+			break;
+		case "viewOrderDesc":
+			viewOrderDesc(request, response);
+			break;
+		case "checkOrderInfo":
+			checkOrderInfo(request, response);
+			break;
+		case "deleteOrder":
+			deleteOrder(request, response);
+			break;
+		case "payOrder":
+			payOrder(request, response);
+			break;
+		}
+	}
+	
+	/**
+	 * 用户支付订单, 调用此方法
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 */
+	private void payOrder(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		//设置延迟, 测试页面重复提交用
+//		try {
+//			Thread.sleep(2000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+		//获取前台设置的页面提交口令, 防止重复提交用
+		Object token =request.getSession().getAttribute("token");
+		if(token ==null) return;
+		
+		//第一次提交成功即删除此口令防止重复提交
+		request.getSession().removeAttribute("token");
+		
+		//查询当前用户id, 未登录则重定向到登录界面
+		User user =(User)request.getSession().getAttribute("user");
+		if(null ==user){
+			//重定向到登录界面
+			response.sendRedirect("Login.jsp");
+			return;
+		}
+		Integer uid =user.getUid();
+		ResultInfo<User> result =new ResultInfo<>();
+		//获取前台传的phone 和aid(地址id), 验证非空
+		String phone =request.getParameter("phone");
+		String aidStr =request.getParameter("aid");
+		if(StringUtil.isEmpty(phone) || StringUtil.isEmpty(aidStr)){
+			result.setCode(0);
+			result.setMsg("电话或地址为空!");
+			JsonUtil.toJson(response, result);
+			return;
+		}
+		
+		//验证手机号合法
+		String regex ="^1([38][0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|9[89])\\d{8}$";
+		if(!phone.matches(regex)){
+			result.setCode(0);
+			result.setMsg("请输入合法的手机号!");
+			JsonUtil.toJson(response, result);
+			return;
+		}
+		
+		//获取前台传的 orderid
+		String orderid =request.getParameter("orderid");
+		//根据orderid 查询到对应的order 对象, 再查询其总金额
+		Double total =orderService.getOrderById(orderid).getTotal();
+		// 再从数据库取当前用户余额
+		Double balance =orderService.getBalanceByUid(uid);
+		
+		
+		//验证余额足够
+		if(balance <total){
+			result.setCode(0);
+			result.setMsg("您的余额不足!");
+			JsonUtil.toJson(response, result);
+			return;
+		}
+		
+		Integer aid =Integer.parseInt(aidStr);
+		//如果有足够余额, 调用下层完成事务, 并设置用户的新余额, 可能抛出自定义的 PayException
+		try {
+			orderService.payOrder(orderid, uid, balance-total, aid, phone);
+			//未报错, 说明事务已经执行成功
+			result.setCode(1);
+			result.setMsg("支付成功!");
+			
+			//设置新的余额和phone 到 result 中, 响应前台
+			user.setPhone(phone);
+			user.setBalance(balance -total);
+			request.getSession().setAttribute("user", user);
+			result.setResult(user);
+			JsonUtil.toJson(response, result);
+			return;
+		} catch (PayException e) {
+			//如果发现当前订单已支付, 抛出此错误
+			result.setCode(0);
+			result.setMsg("订单已支付!");
+			JsonUtil.toJson(response, result);
+			return;
+		}
+	}
+
+	/**
+	 * /order/list.jsp 调用, 用户删除订单 调用此方法
+	 * 先操作数据库, 后分页显示订单
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 */
+	private void deleteOrder(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		//设置延迟, 测试页面重复提交用
+//		try {
+//			Thread.sleep(2000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+		//获取前台设置的页面提交口令, 防止重复提交用
+		Object token =request.getSession().getAttribute("token");
+		if(token ==null) return;
+		
+		//第一次提交成功即删除此口令防止重复提交
+		request.getSession().removeAttribute("token");
+		
+		String orderid =request.getParameter("orderid");
+		Integer rows =orderService.deleteOrder(orderid);
+		if(rows >0){
+			JsonUtil.toJson(response, "删除成功");
+		}else{
+			JsonUtil.toJson(response, "删除失败");
+		}
+		
+	}
+
+	/**
+	 * 在提交订单或者修改收货地址时, 调用此方法, 将订单的地址/手机号 和数据库中的信息匹配 
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws SQLException 
+	 */
+	private void checkOrderInfo(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		//查询当前用户id, 未登录则重定向到登录界面
+		User user =(User)request.getSession().getAttribute("user");
+		if(null ==user){
+			//重定向到登录界面
+			response.sendRedirect("Login.jsp");
+			return;
+		}
+		
+		String phone =request.getParameter("phone");
+		String addr =request.getParameter("addr");
+		Integer aid =Integer.parseInt(request.getParameter("aid"));
+		
+		
+		Integer uid =user.getUid();
+		
+		//先验证格式是否匹配, 再调用下层修改用户的phone
+		String regex ="^1([38][0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|9[89])\\d{8}$";
+		if(phone.matches(regex)){
+			UserDao userDao =new UserDao();
+			try {
+				userDao.updatePhone(uid, phone);
+				user.setPhone(phone);
+				request.getSession().setAttribute("user", user);
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		
+		//调下层 , 修改指定order 的地址
+		String orderid =request.getParameter("orderid");
+		orderService.updateAddr(orderid, aid, addr);
+		
+		//响应"1"给ajax回调函数
+		response.getWriter().write("1");
+		
+	}
+
+	/**
+	 * 在订单分页表中, 点击查看或订单号, 查看订单详情
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void viewOrderDesc(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//查询当前用户id, 未登录则重定向到登录界面
+		User user =(User)request.getSession().getAttribute("user");
+		if(null ==user){
+			//重定向到登录界面
+			response.sendRedirect("Login.jsp");
+			return;
+		}
+		//获得orderID, uid
+		String orderid =request.getParameter("orderid");
+		Integer uid =user.getUid();
+		
+		//根据orderid 获得完整Order对象
+		Order order =orderService.getOrderById(orderid);
+		
+		//调用下层, 得到t_address表中的数据
+		List<Address> aList =orderService.findAddress(uid);
+		//查询当前Order是否有 aid
+		Address address =orderService.findSingleAddress(orderid);
+		order.setAddr(address);
+		
+		//跳转到订单详情页面
+		request.setAttribute("changePage", "jsps/order/desc.jsp");
+		request.setAttribute("aList", aList);
+		//把完整订单信息存到域对象
+		request.setAttribute("order", order);
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+		
+	}
+
+	/**
+	 * 购物车选中的条目提交, 调用此方法 (添加订单)
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void addOrder(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//		//设置延迟, 测试页面重复提交用
+//		try {
+//			Thread.sleep(2000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+		//获取前台设置的页面提交口令, 防止重复提交用
+		Object token =request.getSession().getAttribute("token");
+		if(token ==null) return;
+		
+		//第一次提交成功即删除此口令防止重复提交
+		request.getSession().removeAttribute("token");
+		
+		//查询当前用户id, 未登录则重定向到登录界面
+		User user =(User)request.getSession().getAttribute("user");
+		if(null ==user){
+			//重定向到登录界面
+			response.sendRedirect("Login.jsp");
+			return;
+		}
+		String cartItemIds =request.getParameter("cartItemIds");
+		Integer uid =user.getUid();
+		
+		String[] cartItemArray =cartItemIds.split(",");	//获得cartItem主键的数组
+		
+		//创建Order对象
+		Order order =new Order();
+		order.setOrderid(CommonUtils.uuid());	//随机主键
+		order.setOrdertime(new Date());		//设置下单时间为当前
+		order.setStatus(1);		//设置状态为未支付
+		
+		Double total =0.00;
+		List<OrderItem> list =new ArrayList<>();
+		//根据CartItemArray, 创建多个OrderItem对象
+		for(String cartItemId: cartItemArray){
+			//调下层获得完整CartItem(含course)对象
+			//将每个CartItem对应生成 OrderItem
+			CartItem c =cartService.findCartItem(cartItemId);
+			OrderItem o =new OrderItem();
+			o.setOrderitemid(c.getCartitemid());
+			o.setCourse(c.getCourse());
+			o.setOrder(order);
+			o.setQuantity(c.getQuantity());
+			o.setSubtotal(c.getQuantity() *c.getCourse().getPrice());
+			
+			total +=o.getSubtotal();
+			list.add(o);
+			
+		}
+		
+		//如果成功, 把List<OrderItem>设置进入 Order
+		order.setOrderitemlist(list);
+		//设置订单总金额
+		order.setTotal(total);
+		
+		//把完整order 传给下层, 用事务完成数据库的修改
+		orderService.addOrder(order, cartItemIds, uid);
+		
+		//调用下层, 得到t_address表中的数据
+		List<Address> aList =orderService.findAddress(uid);
+		
+		//跳转到订单详情页面
+		request.setAttribute("changePage", "jsps/order/desc.jsp");
+		request.setAttribute("aList", aList);
+		//把完整订单信息存到域对象
+		request.setAttribute("order", order);
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+		
+	}
+
+	/**
+	 * 显示订单, 前台点击"我的订单", 删除订单后可调用此接口显示余下订单
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void showOrder(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//查询当前用户id, 未登录则重定向到登录界面
+		User user =(User)request.getSession().getAttribute("user");
+		if(null ==user){
+			//重定向到登录界面
+			response.sendRedirect("Login.jsp");
+			return;
+		}
+		//获取前台传的url, 存起来以备下次分页时调用
+		String url =request.getRequestURI()+"?"+ request.getQueryString();
+		Integer index =url.indexOf("pageNum");
+		url =url.substring(0, index-1);	//  /aixuetang/order?actionName=showOrder&
+		
+		Integer pageSize =2;	//设定每页显示数量
+		
+		Integer pageNum =1;		//默认的当前页
+		String pageNumStr =request.getParameter("pageNum");
+		if(! pageNumStr.isEmpty()){
+			//如果前台传了 pageNum这个参数, 则设定pageNum, 否则默认1
+			pageNum =Integer.valueOf(pageNumStr);
+		}
+		
+		//从域对象获得当前 user
+		
+		Integer uid =user.getUid();
+		
+		//调下层, 得到 总记录数totalCount
+		long totalCount =orderService.getTotalCount(uid);
+		
+		//调下层, 得到当前用户所有的订单(含完整的Address信息, 需要当前页, 每页个数作为参数去分页 )
+		List<Order> orderItemList =orderService.showOrder(uid, pageNum, pageSize);
+		
+		//设置Page对象,包含List<Order>,  返回给前台做分页
+		Page<Order> page =new Page(pageNum, pageSize, totalCount, url, orderItemList);
+		//设置跳转页面
+		request.setAttribute("changePage", "jsps/order/list.jsp");
+		request.setAttribute("page", page);
+		
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+	}
+
+}

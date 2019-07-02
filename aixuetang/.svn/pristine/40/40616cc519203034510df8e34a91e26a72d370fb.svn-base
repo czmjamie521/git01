@@ -1,0 +1,33 @@
+package com.sxt.Dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.sxt.model.BaseDao;
+import com.sxt.model.Course;
+import com.sxt.model.ShowTag;
+
+public class Dao {
+
+	public List<Course> listCourse( Integer pageSize, Integer index) {
+		String sql="select * from t_course limit ?,?";
+		List<Object> params=new ArrayList<>();
+		params.add(index);
+		params.add(pageSize);
+		List<Course> list=(List<Course>) BaseDao.queryRows(sql, params, Course.class);
+		return list;
+	}
+
+	public long findNoteCountByUserId() {
+		String sql="select count(1) from t_course";
+		long row=(long) BaseDao.findSingleVlaue(sql, null);
+		return row;
+	}
+
+	public List<ShowTag> listTag() {
+		String sql="select m.tagid,tagname,count(1) count from t_tag n INNER JOIN t_course m on m.tagid=n.tagid GROUP BY tagid order by count desc";
+		List<ShowTag> list=BaseDao.queryRows(sql, null, ShowTag.class);
+		return list;
+	}
+
+}

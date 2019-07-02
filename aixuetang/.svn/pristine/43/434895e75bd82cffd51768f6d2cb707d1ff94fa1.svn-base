@@ -1,0 +1,50 @@
+package com.sxt.course;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.sxt.model.Course;
+import com.sxt.model.ShowTag;
+import com.sxt.service.CourseService;
+import com.sxt.util.Page;
+
+/**
+ * Servlet implementation class CourseServlet
+ */
+@WebServlet("/courseservlet")
+public class CourseServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	CourseService CourseService=new CourseService();
+	/**
+	 * @see HttpServlet#service(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String actionName=request.getParameter("actionName");
+		if("loadcourse".equals(actionName)){
+			loadCourse(request,response);
+		}
+		
+	}
+
+	private void loadCourse(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	     String pageNum=request.getParameter("pageNum");
+		 Page page=CourseService.findCourselist(pageNum);
+		if(page.getDataList()==null){
+			request.setAttribute("warn", "网络异常,请重试!");
+			
+		}else{
+			ShowTag showTag=CourseService.findCourseTaglistByTag();
+			request.setAttribute("page", page);
+			request.getSession().setAttribute("showTag", "showTag");
+		}
+		
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);;
+	}
+
+}

@@ -1,0 +1,188 @@
+package com.shsxt.userservice;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.mysql.fabric.Response;
+import com.shsxt.userdao.UserDao;
+import com.sxt.util.ResultInfo;
+import com.sxt.util.StringUtil;
+import com.sxt.util.User;
+
+import jdk.nashorn.internal.ir.RuntimeNode.Request;
+
+
+public class UserService {
+	private UserDao userdao=new UserDao();
+
+	public ResultInfo<User> checkByUname(String uname) {
+		//�õ�web�㴫���Ĳ���uname
+		ResultInfo<User> resultinfo=new ResultInfo();
+		User user=new User();
+		user.setUname(uname);
+		resultinfo.setResult(user);
+		//�ж�web���������Ƿ�ǿ�
+		if(StringUtil.isEmpty(uname)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("�û�������Ϊ��");
+			return resultinfo;
+		}
+		//�õ���̨����������
+		User u=userdao.checkUname(uname);
+		if(u==null){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("�û�����������");
+			return resultinfo;
+		}
+			resultinfo.setCode(1);
+			return resultinfo;
+		
+		
+	}
+
+	public ResultInfo loginByName(String uname, String upwd) {
+		//�õ�web��Ĳ���uname��upwd
+		ResultInfo<User> resultinfo=new ResultInfo();
+		User user = new User();
+		user.setUname(uname);
+		user.setUpwd(upwd);
+		resultinfo.setResult(user);
+		//�ж�uname��upwd�Ƿ�ǿ�
+		if(StringUtil.isEmpty(uname)||StringUtil.isEmpty(upwd)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("�û���������Ϊ��");
+			return resultinfo;
+		}
+		//����dao���user
+		User u=userdao.loginunameandupwd(uname,upwd);
+		
+		//�ж��Ƿ�Ϊ��
+		if(u==null){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("* �û������������,����������!");
+			return resultinfo;
+		}
+		resultinfo.setCode(1);
+		resultinfo.setMsg("��¼�ɹ�");
+		resultinfo.setResult(u);
+		
+		return resultinfo;
+	}
+
+	public ResultInfo<User> registerUser(HttpServletRequest request) {
+		//���ǰ̨����
+		String uname=request.getParameter("uname");
+		String email=request.getParameter("email");
+		String phone=request.getParameter("phone");
+		String upwd=request.getParameter("upwd");
+		String head=request.getParameter("head");
+		ResultInfo<User> resultinfo=new ResultInfo();
+		User user=new User();
+		user.setUname(uname);
+		user.setEmail(email);
+		user.setPhone(phone);
+		user.setUpwd(upwd);
+		user.setHead(head);
+		resultinfo.setResult(user);
+		if(StringUtil.isEmpty(uname)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("�û�������Ϊ��");
+			return resultinfo;
+		}
+		if(StringUtil.isEmpty(upwd)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("���벻��Ϊ��");
+			return resultinfo;
+		}
+		if(StringUtil.isEmpty(phone)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("���벻��Ϊ��");
+			return resultinfo;
+		}
+		//�õ���̨����Ӱ�������Ĳ���
+ 		int row=userdao.registerUser(uname,email,phone,upwd,head);
+		System.out.println(row);
+		if(row>0){
+			resultinfo.setCode(1);
+			User u=userdao.loginunameandupwd(uname,upwd);
+			resultinfo.setResult(u);
+			return resultinfo;
+		}
+		resultinfo.setCode(0);
+		resultinfo.setMsg("����û�ʧ��");
+		return resultinfo;
+	}
+
+	public ResultInfo<User> uniqueUser(String uname) {
+		//����uname��email
+		ResultInfo<User> resultinfo=new ResultInfo();
+		User user=new User();
+		user.setUname(uname);
+		
+		resultinfo.setResult(user);
+		//�ж��Ƿ�ǿ�
+		if(StringUtil.isEmpty(uname)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("�û�������Ϊ��");
+			return resultinfo;
+		}
+		//�ж��û����Ƿ��ظ�
+		//�õ���̨�������û�
+		User u=userdao.uniqueByName(uname);
+		System.out.println(u);
+		
+		//�ж�ǰ̨������
+		if(u==null){
+			resultinfo.setCode(1);
+			return resultinfo;
+		}
+		resultinfo.setCode(0);
+		resultinfo.setMsg("* �û����ѱ�ռ��");
+		return resultinfo;
+		}
+	
+	public ResultInfo<User> payByUserId(double balance, Integer uid) {
+		//����һ�����յĶ���
+		ResultInfo<User> resultinfo=new ResultInfo();
+		User user = new User();
+		user.setBalance(balance);
+		resultinfo.setResult(user);
+		//�жϽ���Ƿ�ǿ�
+		if(balance<=0){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("������С����");
+			return resultinfo;
+		}
+		//�õ�dao�㴫����user��balance
+		int row=userdao.payBalance(balance,uid);
+		if(row>0){
+			resultinfo.setCode(1);
+			resultinfo.setMsg("��ֵ�ɹ�");
+			User u=userdao.checkBalance(uid);
+			resultinfo.setResult(u);
+			return resultinfo;
+		}
+		resultinfo.setCode(0);
+		resultinfo.setMsg("��ֵʧ��");
+		return resultinfo;
+	}
+
+	public ResultInfo<User> updateUser(String userphone, String useremail, String sex, String age, int uid) {
+		ResultInfo<User> resultinfo=new ResultInfo();
+		if(StringUtil.isEmpty(userphone)||StringUtil.isEmpty(useremail)||StringUtil.isEmpty(sex)||StringUtil.isEmpty(age)){
+			resultinfo.setCode(0);
+			return resultinfo;
+		}
+		int row=userdao.updateUser( userphone,  useremail,  sex,  age,  uid);
+		if(row<1){
+			resultinfo.setCode(0);
+			return resultinfo;
+		}
+		resultinfo.setCode(1);
+		return resultinfo;
+	}
+		
+	}
+
+	
+	
+

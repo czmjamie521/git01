@@ -1,0 +1,167 @@
+package com.sxt.cartitem.web.servlet;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.sxt.cartitem.dao.CartDao;
+import com.sxt.cartitem.domain.CartItem;
+import com.sxt.cartitem.service.CartService;
+import com.sxt.util.JsonUtil;
+import com.sxt.util.User;
+
+/**
+ * Servlet implementation class CartServlet
+ */
+@WebServlet("/cart")
+public class CartServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	private CartService cartService =new CartService();
+	private CartDao cartDao =new CartDao();
+
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String actionName =request.getParameter("actionName");
+		switch(actionName){
+		case "add":
+			add(request, response);
+			break;
+		case "showCart":
+			showCart(request, response);
+			break;
+		case "cartdelete":
+			cartdelete(request, response);
+			break;
+		case "updateQuantity":
+			updateQuantity(request, response);
+			break;
+		case "batchAdd":
+			batchAdd(request, response);
+			break;
+		}
+		
+	}
+	
+	/**
+	 * 课程详情页中, 批量增加课程到购物车
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 */
+	private void batchAdd(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		//查询当前用户id, 未登录则重定向到登录界面
+		User user =(User)request.getSession().getAttribute("user");
+		if(null ==user){
+			//重定向到登录界面
+			response.sendRedirect("Login.jsp");
+			return;
+		}
+		
+		//获取前台的courseid 以及当前uid
+		Integer courseid =Integer.valueOf(request.getParameter("courseid"));
+		Integer uid =user.getUid();
+		String amountStr =request.getParameter("amount");
+		
+		String regex ="[1-9]";
+		//对前台传来的数量进行验证
+		if(!amountStr.matches(regex)){
+			JsonUtil.toJson(response, "请输入1-9!");
+			return;
+		}
+		//如果通过验证, 得到实际添加数
+		Integer amount =Integer.valueOf(amountStr);
+		
+		//调用下层, 批量添加
+		cartService.add(courseid, uid, amount);
+		JsonUtil.toJson(response, "添加成功!");
+	}
+
+	/**
+	 * 鍓嶅彴瀵硅喘鐗╄溅鏉＄洰鏁板仛澧炲噺, 璋冪敤姝ゆ柟娉曞悓姝ヨ皟鏁存暟鎹簱
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 */
+	private void updateQuantity(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String cartItemId =request.getParameter("cartItemId");
+		Integer quantity =Integer.valueOf(request.getParameter("quantity"));
+		
+		//璋冧笅灞�, 鎵цupdate
+		cartService.update(cartItemId, quantity);
+		//鏍规嵁cartItemid, 鏌ヨ鏇存柊鍚庣殑 CartItem瀵硅薄
+		CartItem cartItem =cartService.findCartItem(cartItemId);
+		JsonUtil.toJson(response, cartItem);
+	}
+
+	/**
+	 * 璐墿杞︽潯鐩壒閲忓垹闄�, 鍙傛暟涓洪�変腑鐨� cartItemId缁勬垚鐨勬暟缁�
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void cartdelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String cartItemIds =request.getParameter("cartItemIds");
+		//璋冧笅灞�, 鎵ц鎵归噺鍒犻櫎涓氬姟
+		cartService.cartdelete(cartItemIds);
+		showCart(request, response);
+	}
+
+	/**
+	 * mainweb.jsp 鐐瑰嚮"鏄剧ず璐墿杞�", 鎴朿ourseshop.jsp鐐瑰嚮"鍔犲叆鍖呰⒈", 閮戒細璋冪敤姝ゆ柟娉�
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void showCart(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//查询当前用户id, 未登录则重定向到登录界面
+		User user =(User)request.getSession().getAttribute("user");
+		if(null ==user){
+			//重定向到登录界面
+			response.sendRedirect("Login.jsp");
+			return;
+		}
+		Integer uid =user.getUid();
+		
+		//璋冧笅灞�, 鑾峰緱List<CartItem>
+		List<CartItem> cartItemList =cartService.showCart(uid);
+		//璁剧疆list鍒板墠鍙�, 璁剧疆鍔ㄦ�侀〉闈�
+		request.setAttribute("cartItemList", cartItemList);
+		request.setAttribute("changePage", "jsps/cart/list.jsp");
+		
+		//璇锋眰杞彂
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+	}
+
+	/**
+	 * courseshop.jsp 中, 点击 加入包袱 调用此方法
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void add(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//查询当前用户id, 未登录则重定向到登录界面
+		User user =(User)request.getSession().getAttribute("user");
+		if(null ==user){
+			//重定向到登录界面
+			response.sendRedirect("Login.jsp");
+			return;
+		}
+		
+		//获取前台的courseid 以及当前uid
+		Integer courseid =Integer.valueOf(request.getParameter("courseid"));
+		Integer uid =user.getUid();
+		
+		//调用下层, 实现添加(默认添加1个)
+		cartService.add(courseid, uid, 1);
+		
+		JsonUtil.toJson(response, "添加成功");
+	}
+
+}

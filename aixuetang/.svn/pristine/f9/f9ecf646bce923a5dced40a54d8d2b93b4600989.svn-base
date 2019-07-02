@@ -1,0 +1,95 @@
+//为评价框绑定鼠标移事件
+window.onload=function(){
+	//获取教师id
+	var id=$("#teacherid").val();
+	//发送ajax请求
+	 $.ajax({
+		  type:"get",
+		  url:"teacherservlet",
+		  data:{
+			  //查询该教师是否有课程
+			  actionName:"seach",
+			  teacherid:id,
+		  },
+		  success:function(result) {
+			  // 判断是否查询成功
+			  if (result.code == 1) { 
+				 //进行DOM操作,获取表格对象
+				 
+				  var tr=$("#tablebody").children().children();
+				//循环读取对象中的数据
+				  console.log(result.result.length);
+				  for(var i=0;i<result.result.length;i++){
+				 th="<tr>";
+				 th+="<th>"+result.result[i].coursename+"</th>" ;
+				 th+="<th>$"+result.result[i].price+"</th>";
+				 th+="<th>"+result.result[i].desc+"</th>";
+				 th+="</tr>"
+				 $("#tablebody").append(th);
+				
+			 }
+				
+			  } 
+			  
+			  //没有查询课程信息
+			  if(result.code==0){
+				  //移除整个表格
+				  $("#table").remove();
+				 
+				  $("#teachermsg").html("该教师暂无课程信息!");
+			  }
+			  
+			  
+			  
+		  }
+	  });
+	
+	
+}
+
+
+$("#review").blur(function(){
+	//获取意见框的文本值
+	var review=$("#review").val();
+	//判断是否为空
+	
+	if(review==null||review.trim()==""){
+		$("#msg").html("意见不能为空！");
+		$("#submit").prop('disabled',true);
+	}
+}).focus(function(){
+	$("#msg").html(" ");
+		$("#submit").prop('disabled',false);
+})
+
+
+//需求：1.该学生必须选择该老师的课程才能评论
+//    2.学生用户无论是否购买都可以可以评论子评论
+//获取按键
+$("#submit").click(function(){
+	//获取评论框的文本值和教师id
+	var review=$("#review").html();
+	var id=$("#teacherid").val();
+	//ajax后台校验
+	 $.ajax({
+		  type:"get",
+		  url:"teacherservlet",
+		  data:{
+			  actionName:"cheakuser",
+			  teacherid:id,
+		  },
+		  success:function(result) {
+			  // 判断是否查询成功
+			  if (result.code ==0) { 
+				 //进行DOM操作,获取表格对象
+				  $("#msg").html("请先购买该课程在进行评价！");
+				  $("#submit").prop('disabled',true);
+			 }
+				
+			
+			  
+		  }
+	  });
+	
+	
+})

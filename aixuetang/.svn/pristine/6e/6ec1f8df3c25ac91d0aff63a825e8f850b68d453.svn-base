@@ -1,0 +1,210 @@
+package com.sxt.order.web.servlet;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.po.Address;
+import com.shsxt.userdao.UserDao;
+import com.sxt.cartitem.domain.CartItem;
+import com.sxt.cartitem.service.CartService;
+import com.sxt.order.domain.Order;
+import com.sxt.order.domain.OrderItem;
+import com.sxt.order.page.Page;
+import com.sxt.order.service.OrderService;
+import com.sxt.util.User;
+
+import cn.itcast.commons.CommonUtils;
+
+@WebServlet("/order")
+public class OrderServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	private OrderService orderService =new OrderService();
+	private CartService cartService =new CartService();
+	
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String actionName =request.getParameter("actionName");
+		switch(actionName){
+		case "showOrder":
+			showOrder(request, response);
+			break;
+		case "addOrder":
+			addOrder(request, response);
+			break;
+		case "viewOrderDesc":
+			viewOrderDesc(request, response);
+			break;
+		case "checkOrderInfo":
+			checkOrderInfo(request, response);
+			break;
+		}
+	}
+	
+	/**
+	 * 在提交订单或者修改收货地址时, 调用此方法, 将订单的地址/手机号 和数据库中的信息匹配 
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws SQLException 
+	 */
+	private void checkOrderInfo(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String phone =request.getParameter("phone");
+		String addr =request.getParameter("addr");
+		Integer aid =Integer.parseInt(request.getParameter("aid"));
+		
+		//获得Session中的User
+		Integer uid =((User)request.getSession().getAttribute("user")).getUid();
+		
+		//调用下层修改用户的phone
+		UserDao userDao =new UserDao();
+		try {
+			userDao.updatePhone(uid, phone);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+		//调下层 , 修改指定order 的地址
+		String orderid =request.getParameter("orderid");
+		orderService.updateAddr(orderid, aid, addr);
+		
+		//响应"1"给ajax回调函数
+		response.getWriter().write("1");
+		
+	}
+
+	/**
+	 * 在订单分页表中, 点击查看或订单号, 查看订单详情
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void viewOrderDesc(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//获得orderID, uid
+		String orderid =request.getParameter("orderid");
+		Integer uid =((User)request.getSession().getAttribute("user")).getUid();
+		
+		//根据orderid 获得完整Order对象
+		Order order =orderService.getOrderById(orderid);
+		
+		//调用下层, 得到t_address表中的数据
+		List<Address> aList =orderService.findAddress(uid);
+		//查询当前Order是否有 aid
+		Address address =orderService.findSingleAddress(orderid);
+		order.setAddr(address);
+		
+		//跳转到订单详情页面
+		request.setAttribute("changePage", "jsps/order/desc.jsp");
+		request.setAttribute("aList", aList);
+		//把完整订单信息存到域对象
+		request.setAttribute("order", order);
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+		
+	}
+
+	/**
+	 * 购物车选中的条目提交, 调用此方法 (添加订单)
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void addOrder(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String cartItemIds =request.getParameter("cartItemIds");
+		Integer uid =((User)request.getSession().getAttribute("user")).getUid();
+		String[] cartItemArray =cartItemIds.split(",");	//获得cartItem主键的数组
+		
+		//创建Order对象
+		Order order =new Order();
+		order.setOrderid(CommonUtils.uuid());	//随机主键
+		order.setOrdertime(new Date());		//设置下单时间为当前
+		order.setStatus(1);		//设置状态为未支付
+		
+		Double total =0.00;
+		List<OrderItem> list =new ArrayList<>();
+		//根据CartItemArray, 创建多个OrderItem对象
+		for(String cartItemId: cartItemArray){
+			//调下层获得完整CartItem(含course)对象
+			//将每个CartItem对应生成 OrderItem
+			CartItem c =cartService.findCartItem(cartItemId);
+			OrderItem o =new OrderItem();
+			o.setOrderitemid(c.getCartitemid());
+			o.setCourse(c.getCourse());
+			o.setOrder(order);
+			o.setQuantity(c.getQuantity());
+			o.setSubtotal(c.getQuantity() *c.getCourse().getPrice());
+			
+			total +=o.getSubtotal();
+			list.add(o);
+		}
+		
+		//如果成功, 把List<OrderItem>设置进入 Order
+		order.setOrderitemlist(list);
+		//设置订单总金额
+		order.setTotal(total);
+		
+		//把完整order 传给下层, 用事务完成数据库的修改
+		orderService.addOrder(order, cartItemIds, uid);
+		
+		//调用下层, 得到t_address表中的数据
+		List<Address> aList =orderService.findAddress(uid);
+		
+		//跳转到订单详情页面
+		request.setAttribute("changePage", "jsps/order/desc.jsp");
+		request.setAttribute("aList", aList);
+		//把完整订单信息存到域对象
+		request.setAttribute("order", order);
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+		
+	}
+
+	/**
+	 * 显示订单, 前台点击"我的订单"
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void showOrder(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//获取前台传的url 
+		String url =request.getRequestURI()+"?"+ request.getQueryString();
+		Integer index =url.indexOf("pageNum");
+		url =url.substring(0, index-1);	//  /aixuetang/orderactionName=showOrder&
+		
+		Integer pageSize =2;	//设定每页显示数量
+		
+		Integer pageNum =1;		//默认的当前页
+		String pageNumStr =request.getParameter("pageNum");
+		if(! pageNumStr.isEmpty()){
+			//如果前台传了 pageNum这个参数, 则设定pageNum, 否则默认1
+			pageNum =Integer.valueOf(pageNumStr);
+		}
+		
+		//从域对象获得当前 user
+		User user =(User)request.getSession().getAttribute("user");
+		Integer uid =user.getUid();
+		
+		//调下层, 得到 总记录数totalCount
+		long totalCount =orderService.getTotalCount(uid);
+		
+		//调下层, 得到当前用户所有的订单(含完整的Address信息, 需要当前页, 每页个数作为参数去分页 )
+		List<Order> orderItemList =orderService.showOrder(uid, pageNum, pageSize);
+		
+		//设置Page对象,包含List<Order>,  返回给前台做分页
+		Page<Order> page =new Page(pageNum, pageSize, totalCount, url, orderItemList);
+		//设置跳转页面
+		request.setAttribute("changePage", "jsps/order/list.jsp");
+		request.setAttribute("page", page);
+		
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+	}
+
+}

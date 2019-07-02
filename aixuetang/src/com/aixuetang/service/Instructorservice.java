@@ -1,0 +1,73 @@
+package com.aixuetang.service;
+
+import java.util.List;
+
+import com.aixuetang.dao.instuctorservletDao;
+import com.aixuetang.po.Teacher;
+import com.aixuetang.po.vo.ResultInfo;
+import com.aixuetang.until.Page;
+import com.aixuetang.until.StringUtil;
+
+
+
+
+public class Instructorservice {
+	
+	
+	//进行查询教师整个信息
+	instuctorservletDao dao=new instuctorservletDao();
+	public Page<Teacher> fingteacherall(String pageNumStr, String pageSizeStr, String teachername) {
+	//默认显示第一页
+	Integer pagenum=1;
+	//每页默认显示8条数据
+	Integer pagesize=8;
+	if(!StringUtil.isEmpty(pageSizeStr)){
+		//有参数传入时按传入参数为重
+		pagesize=Integer.parseInt(pageSizeStr);
+	}
+	if(!StringUtil.isEmpty(pageNumStr)){
+		//有参数传入时按传入参数为重
+		pagenum=Integer.parseInt(pageNumStr);
+	}
+	
+	
+	//调用dao层查询教师的数量
+	long totle=dao.fingteacher(teachername);
+	//数量小于0
+	if(totle<0){
+		return null;
+	}
+	//不为空继续查询教师对象
+	
+	
+	//List<Teacher> list=dao.fingteacherAll();
+	
+	
+	Page<Teacher> page = new Page<>(pagenum, pagesize, totle);
+	
+	// 得到开始查询的下标  （当前页-1）*每页显示的数量
+	Integer index = (pagenum - 1) * pagesize;
+	// 通过当前登录用户ID查询当前页的数据集合
+	List<Teacher> list= dao.fingteacherAll(pagenum, pagesize, index,teachername);
+	// 将分页查询的集合设置到page对象中
+	page.setDataList(list);
+	
+	return page;
+		
+	}
+	public ResultInfo<Teacher> fingteacherbyid(String teacheid) {
+	
+		Teacher t=dao.fingteachderbyid(teacheid);
+		ResultInfo<Teacher> info=new ResultInfo<>();
+		if(t==null){
+			info.setCode(0);
+			info.setMsg("未查询到该教师信息");
+			return info;
+		}
+		info.setCode(1);
+		info.setMsg("查询成功");
+		info.setResult(t);
+		return info;
+	}
+
+}

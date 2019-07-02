@@ -1,0 +1,278 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<!doctype html>
+<html lang="zxx">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
+<title>EduSplash - Education Responsive HTML Template</title>
+</head>
+
+<script type="text/javascript">
+$(function(){
+	//得到所有 条目首列复选框的包装集
+	var cartItems =$(".cartitem");
+	
+	showTotal();
+	
+	//全选按钮绑定点击事件
+	$("#selectAll").click(function(){
+		var flag =$("#selectAll").prop("checked");	//获取全选按钮是否被选中
+		
+		if(flag){	//全选
+			$("#cartsubmit").prop("disabled",false);
+		}else{	//全不选, 设置提交订单按钮失效
+			$("#cartsubmit").prop("disabled",true);
+		}
+		
+		//设置所有复选框和全选相同
+		cartItems.each(function(){
+			$(this).prop("checked",flag);
+		})
+		
+		showTotal();
+	})
+	
+	//每一个复选框绑定点击事件
+	$("input:checkbox[name='checkBox']:checked").click(function(){
+		
+		var allLen =cartItems.length;
+		var len =$("input:checkbox[name='checkBox']:checked").length;
+		if(len ==0){
+			//全不选
+			$("#selectAll").prop("checked",false);
+			//提交失效
+			$("#cartsubmit").prop("disabled",true);
+		}else if(len ==allLen){
+			//全选
+			$("#selectAll").prop("checked",true);
+			//提交有效
+			$("#cartsubmit").prop("disabled",false);
+		}else{
+			$("#selectAll").prop("checked",false);
+			//提交有效
+			$("#cartsubmit").prop("disabled",false);
+		}
+		showTotal();
+	})
+	
+	//给减号添加click事件
+	$(".minus").click(function(){
+		var id =$(this).attr("id").substring(0,32);	//获得减号对应的条目 id
+		//获取输入框的数量
+		var quantity =$("#"+id+"quantity").val();
+		//判断当前数量是否为1, 如果是1, 则弹框确认是否删除
+		if(quantity ==1){
+			if(confirm("您是否真要删除该条目?")){
+				//调用删除接口
+				location ="cart?actionName=cartdelete&cartItemIds=" +id;
+			}
+		}else{
+			//调用函数发起异步请求
+			sendUpdateQuantity(id, Number(quantity)-1);
+		}
+	})
+	
+	//加号添加点击事件
+	$(".plus").click(function(){
+		var id =$(this).attr("id").substring(0,32);	//获得减号对应的条目 id
+		//获取输入框的数量
+		var quantity =$("#"+id+"quantity").val();
+		//调用函数发起异步请求
+		sendUpdateQuantity(id, Number(quantity)+1); 
+	})
+	
+	//删除条目 按钮绑定点击事件
+	$("#cartdelete").click(function(){
+		//点击删除先确认
+		if(confirm("您是否真要删除这些课程?")){
+			//获取所有被选中的id 构成的数组
+			var ids =new Array();
+			$("input:checkbox[name='checkBox']:checked").each(function(){
+				ids.push($(this).attr("id"));
+			});
+			location ="cart?actionName=cartdelete&cartItemIds=" +ids.toString(); 
+			showTotal();
+		}
+		
+	})
+	
+	//提交订单  绑定点击事件
+	$("#cartsubmit").click(function(){
+		//获取所有被选中的id 构成的数组
+		var ids =new Array();
+		$("input:checkbox[name='checkBox']:checked").each(function(){
+			ids.push($(this).attr("id"));
+		});
+		// 把数据流转到下一个页面
+		location ="order?actionName=addOrder&cartItemIds=" +ids.toString(); 
+	})
+	
+})
+
+//请求服务器, 修改条目数量
+function sendUpdateQuantity(id, quantity){
+	$.ajax({
+		url:"cart",
+		data:{
+			actionName:"updateQuantity",
+			cartItemId: id,
+			quantity: quantity
+		},
+		type:"post",
+		dataType:"json",
+		cache:false,
+		success: function(result){
+			//修改框里的数量
+			$("#"+id+"quantity").val(result.quantity);
+			//修改小计
+			$("#"+id+"subtotal").text(result.subtotal);
+			//重新计算总计
+			showTotal();
+		}
+		
+	});
+}
+
+//显示所有选中条目金额总计
+function showTotal(){
+	//得到所有 条目首列复选框的包装集
+	var cartItems =$(".cartitem");
+	
+	var cartTotal =0;	//购物车总金额
+	var total =0;	//订单总金额
+	cartItems.each(function(){
+		var id =$(this).attr("id");
+		//循环添加购物车金额
+		cartTotal += Number($("#" +id +"subtotal").text());
+		//循环添加被选中条目金额
+		if($(this).prop("checked")){
+			total += Number($("#" +id +"subtotal").text());
+		}
+	});
+	
+	//设置总计的值, 取两位小数
+	$("#carttotal").text(cartTotal.toFixed(2));
+	$("#total").text(total.toFixed(2));
+}
+
+</script>
+
+<body>
+
+	<!-- 购物车开始 -->
+	<section class="cart-section pt-100 pb-180">
+		<div class="container">
+			<div class="table-responsive cart-table">
+
+				<c:if test="${empty cartItemList }">
+					<h2>购物车空空如也</h2>
+				</c:if>
+
+				<c:if test="${!empty cartItemList }">
+
+
+					<table class="table table-bordered">
+						<thead>
+							<tr>
+								<th width="10%">全选 <input type="checkbox" id="selectAll" checked>
+								</th>
+								<th width="20%">课程</th>
+								<th width="30%">课程全名</th>
+								<th width="10%">价格</th>
+								<th width="20%">数量</th>
+								<th width="10%">小计</th>
+							</tr>
+						</thead>
+
+						<tbody>
+
+							<!-- 循环遍历List, 得到购物车中每一个条目 -->
+							<c:forEach items="${cartItemList }" var="item">
+								<tr>
+									<td>
+										<input class="cartitem" name="checkBox" type="checkbox" id="${item.cartitemid }" checked>
+									</td>
+									<td>
+										<a href="" class="item-list" id="${item.cartitemid }picture"> 
+											<img src="statics/img/course/${item.course.picture }" alt="">
+										</a>
+									</td>
+									<td>
+										<a href="" class="product" id="${item.cartitemid }coursename"> 
+											${item.course.coursename } 
+										</a>
+									</td>
+										
+									<td>$ ${item.course.price }</td>
+									<td>
+										<form class="add-product-form">
+											<button type="button" id="${item.cartitemid }minus" class="minus">-</button> 
+												<input type="input" class="form-control" 
+												value="${item.quantity }" id="${item.cartitemid }quantity"> 
+											<button type="button" id="${item.cartitemid }plus" class="plus">+</button>
+
+										</form>
+									</td>
+									<td >$ <span id="${item.cartitemid }subtotal">${item.subtotal }</span></td>
+								</tr>
+							</c:forEach>
+
+
+							<!-- <tr>
+								<td class="cart-coupon-code" colspan="5">
+									<form>
+										<input type="text" class="form-control" id="coupon_Code"
+											placeholder="Coupon Code">
+
+										<button type="submit" class="btn btn-primary">Apply
+											Coupon</button>
+									</form>
+								</td>
+								<td>
+									<button type="submit" class="btn btn-primary update-cart">Update
+										Cart</button>
+								</td>
+							</tr> -->
+						</tbody>
+					</table>
+
+					<div class="cart-totals">
+						<h3 class="title">Cart Totals</h3>
+
+						<table class="table table-bordered">
+							<tbody>
+								<tr>
+									<th scope="row" class="text-left">购物车总金额</th>
+									<td>$ <span id="carttotal"></span></td>
+								</tr>
+
+								<tr>
+									<th scope="row" class="text-left">订单总金额</th>
+									<td ><strong>$ </strong><strong id="total"></strong></td>
+								</tr>
+							</tbody>
+						</table>
+
+						<button type="button" class="btn btn-info" id="cartdelete">删除订单</button>
+						<button type="button" class="btn btn-danger" id="cartsubmit">提交订单</button>
+					</div>
+				</c:if>
+			</div>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+		<br/>
+
+		</div>
+	</section>
+	<!-- End Cart -->
+
+</body>
+</html>

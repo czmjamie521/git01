@@ -1,0 +1,61 @@
+package com.sxt.model;
+
+public class Course {
+	private Integer courseid;
+	private String coursename;
+	private Integer teacherid;
+	private String tagname;
+	private Integer tagid;
+	private double price;
+	private String desc;
+	private String picture;
+	public Integer getCourseid() {
+		return courseid;
+	}
+	public void setCourseid(Integer courseid) {
+		this.courseid = courseid;
+	}
+	public String getCoursename() {
+		return coursename;
+	}
+	public void setCoursename(String coursename) {
+		this.coursename = coursename;
+	}
+	public Integer getTeacherid() {
+		return teacherid;
+	}
+	public void setTeacherid(Integer teacherid) {
+		this.teacherid = teacherid;
+	}
+	public Integer getTagid() {
+		return tagid;
+	}
+	public void setTagid(Integer tagid) {
+		this.tagid = tagid;
+	}
+	public double getPrice() {
+		return price;
+	}
+	public void setPrice(double price) {
+		this.price = price;
+	}
+	public String getDesc() {
+		return desc;
+	}
+	public void setDesc(String desc) {
+		this.desc = desc;
+	}
+	public String getPicture() {
+		return picture;
+	}
+	public void setPicture(String picture) {
+		this.picture = picture;
+	}
+	public String getTagname() {
+		return tagname;
+	}
+	public void setTagname(String tagname) {
+		this.tagname = tagname;
+	}
+	
+}

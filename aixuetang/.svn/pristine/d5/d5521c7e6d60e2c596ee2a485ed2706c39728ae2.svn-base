@@ -1,0 +1,29 @@
+package com.sxt.service;
+import java.util.List;
+import com.sxt.Dao.Dao;
+
+import com.sxt.model.Course;
+import com.sxt.util.Page;
+
+public class CourseService {
+    Dao Dao=new Dao();
+	public Page findCourselist(String pageNum) {
+		Integer pageNumer=1;
+		if(pageNum!=null){
+			pageNumer=Integer.parseInt(pageNum);	
+		}
+		Integer pageSize=9;
+		long total = Dao.findNoteCountByUserId();
+		if(total<1){
+			return null;
+		}
+		Integer index=(pageNumer-1)*pageSize;
+		List<Course> list=Dao.listCourse(pageSize,index);
+		Page<Course> page = new Page<>(pageNumer, pageSize, total);
+		page.setDataList(list);
+		return page;
+		// TODO Auto-generated method stub
+		
+	}
+
+}

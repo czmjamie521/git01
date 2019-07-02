@@ -1,0 +1,61 @@
+package com.Dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.po.Address;
+import com.po.Address;
+import com.util.StringUtil;
+import com.Dao.BaseDao;
+
+public class AddressDao {
+
+	public List<Address> findListByUserId(Integer uid) {
+		String sql = "select * from t_address where uid = ?";
+		List<Object>params=new ArrayList<>();
+		params.add(uid);
+		List<Address> list = BaseDao.queryRows(sql, params, Address.class);
+		return list;
+	}
+		//删锟斤拷指锟斤拷锟斤拷址
+	public int deleteAddress(String aid) {
+		String sql="delete from t_address where aid = ?";
+		List<Object> params=new ArrayList<>();
+		params.add(aid);
+		int row=BaseDao.executeUpdate(sql, params);
+		return row;
+	}
+		//锟斤拷证锟斤拷址唯一
+	public Address checkaddress(String address, Integer uid,String aid) {
+		String sql="select *from t_address where address= ? and uid= ? and aid!=? ";
+		
+		List<Object>params=new ArrayList<>();
+		params.add(address);
+		params.add(uid);
+		params.add(aid);
+		Address notetype=(Address) BaseDao.queryRow(sql, params, Address.class);
+		return notetype;
+	}
+		//锟斤拷踊锟缴撅拷锟�
+	public int addorupdate(String address, String aid, String isdefault, Integer uid) {
+		String sql="";
+		
+		
+		List<Object> params=new ArrayList<>();
+		params.add(address);
+		
+		if(StringUtil.isEmpty(aid)){
+			sql="insert into t_address (address,uid) values (?,?)";
+			params.add(uid);
+		}else{
+			sql="update t_address set address = ? where aid = ?";
+			params.add(aid);
+		}
+		
+		int row=BaseDao.executeUpdate(sql, params);
+		return row;
+	}
+
+	
+
+}

@@ -1,0 +1,170 @@
+package com.shsxt.userservice;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.mysql.fabric.Response;
+import com.shsxt.userdao.UserDao;
+import com.sxt.util.ResultInfo;
+import com.sxt.util.StringUtil;
+import com.sxt.util.User;
+
+import jdk.nashorn.internal.ir.RuntimeNode.Request;
+
+
+public class UserService {
+	private UserDao userdao=new UserDao();
+
+	public ResultInfo<User> checkByUname(String uname) {
+		//得到web层传来的参数uname
+		ResultInfo<User> resultinfo=new ResultInfo();
+		User user=new User();
+		user.setUname(uname);
+		resultinfo.setResult(user);
+		//判断web传来参数是否非空
+		if(StringUtil.isEmpty(uname)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("用户名不能为空");
+			return resultinfo;
+		}
+		//拿到后台传来的姓名
+		User u=userdao.checkUname(uname);
+		if(u==null){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("用户姓名不存在");
+			return resultinfo;
+		}
+			resultinfo.setCode(1);
+			return resultinfo;
+		
+		
+	}
+
+	public ResultInfo loginByName(String uname, String upwd) {
+		//得到web层的参数uname和upwd
+		ResultInfo<User> resultinfo=new ResultInfo();
+		User user = new User();
+		user.setUname(uname);
+		user.setUpwd(upwd);
+		resultinfo.setResult(user);
+		//判断uname和upwd是否非空
+		if(StringUtil.isEmpty(uname)||StringUtil.isEmpty(upwd)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("用户名或密码为空");
+			return resultinfo;
+		}
+		//接收dao层的user
+		User u=userdao.loginunameandupwd(uname,upwd);
+		
+		//判断是否为空
+		if(u==null){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("* 用户名或密码错误,请重新输入!");
+			return resultinfo;
+		}
+		resultinfo.setCode(1);
+		resultinfo.setMsg("登录成功");
+		resultinfo.setResult(u);
+		
+		return resultinfo;
+	}
+
+	public ResultInfo<User> registerUser(HttpServletRequest request) {
+		//获得前台参数
+		String uname=request.getParameter("uname");
+		String email=request.getParameter("email");
+		String phone=request.getParameter("phone");
+		String upwd=request.getParameter("upwd");
+		ResultInfo<User> resultinfo=new ResultInfo();
+		User user=new User();
+		user.setUname(uname);
+		user.setEmail(email);
+		user.setPhone(phone);
+		user.setUpwd(upwd);
+		resultinfo.setResult(user);
+		if(StringUtil.isEmpty(uname)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("用户名不能为空");
+			return resultinfo;
+		}
+		if(StringUtil.isEmpty(upwd)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("密码不能为空");
+			return resultinfo;
+		}
+		if(StringUtil.isEmpty(phone)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("号码不能为空");
+			return resultinfo;
+		}
+		//得到后台传来影响行数的参数
+ 		int row=userdao.registerUser(uname,email,phone,upwd);
+		System.out.println(row);
+		if(row>0){
+			resultinfo.setCode(1);
+			User u=userdao.loginunameandupwd(uname,upwd);
+			resultinfo.setResult(u);
+			return resultinfo;
+		}
+		resultinfo.setCode(0);
+		resultinfo.setMsg("添加用户失败");
+		return resultinfo;
+	}
+
+	public ResultInfo<User> uniqueUser(String uname) {
+		//接收uname和email
+		ResultInfo<User> resultinfo=new ResultInfo();
+		User user=new User();
+		user.setUname(uname);
+		
+		resultinfo.setResult(user);
+		//判断是否非空
+		if(StringUtil.isEmpty(uname)){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("用户名不能为空");
+			return resultinfo;
+		}
+		//判断用户名是否重复
+		//得到后台传来的用户
+		User u=userdao.uniqueByName(uname);
+		System.out.println(u);
+		
+		//判断前台传来的
+		if(u==null){
+			resultinfo.setCode(1);
+			return resultinfo;
+		}
+		resultinfo.setCode(0);
+		resultinfo.setMsg("* 用户名已被占用");
+		return resultinfo;
+		}
+	
+	public ResultInfo<User> payByUserId(double balance, Integer uid) {
+		//建立一个接收的对象
+		ResultInfo<User> resultinfo=new ResultInfo();
+		User user = new User();
+		user.setBalance(balance);
+		resultinfo.setResult(user);
+		//判断金额是否非空
+		if(balance<=0){
+			resultinfo.setCode(0);
+			resultinfo.setMsg("金额不可以小于零");
+			return resultinfo;
+		}
+		//得到dao层传来的user的balance
+		int row=userdao.payBalance(balance,uid);
+		
+		if(row>0){
+			resultinfo.setCode(1);
+			resultinfo.setMsg("充值成功");
+			return resultinfo;
+		}
+		resultinfo.setCode(0);
+		resultinfo.setMsg("充值失败");
+		return resultinfo;
+	}
+		
+	}
+
+	
+	
+

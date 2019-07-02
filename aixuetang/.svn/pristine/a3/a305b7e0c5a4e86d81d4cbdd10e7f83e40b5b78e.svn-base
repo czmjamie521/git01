@@ -1,0 +1,105 @@
+package com.Service;
+
+import java.util.List;
+
+import com.Dao.AddressDao;
+import com.po.NoteType;
+import com.sxt.util.DBUtil;
+import com.sxt.util.ResultInfo;
+import com.util.StringUtil;
+
+
+public class AddressService {
+	private AddressDao addressDao = new AddressDao();
+	public ResultInfo<List<NoteType>> findAddress(Integer uid) {
+		List<NoteType> list = addressDao.findListByUserId(uid);
+		ResultInfo<List<NoteType>> resultInfo = new ResultInfo<>();
+		//判断非空
+		if(list==null||list.size()<1){
+			//如果为空
+			resultInfo.setCode(0);
+			resultInfo.setMsg("用户列表不存在");
+		}else{
+			//如果不为空
+			resultInfo.setCode(1);
+			resultInfo.setResult(list);
+		}
+		
+		return resultInfo;
+	}
+	/*
+	 * 删除指定地址
+	 */
+	public ResultInfo<NoteType> deleteAddress(String aid) {
+		ResultInfo<NoteType> resultInfo = new ResultInfo<>();
+		if(StringUtil.isEmpty(aid)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("地址不存在,请重试!!");
+			return resultInfo;
+		}
+		int row=addressDao.deleteAddress(aid);
+		if(row>0){
+			resultInfo.setCode(1);
+			
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("删除失败!");
+		}
+		return resultInfo;
+	}
+	/*
+	 * 验证地址唯一
+	 */
+	public ResultInfo<NoteType> checkaddress(  Integer uid,String address) {
+		ResultInfo<NoteType> resultInfo=new ResultInfo<>();
+		if(StringUtil.isEmpty(address)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("地址不能为空!!");
+			return resultInfo;
+		}
+		
+		NoteType notetype=addressDao.checkaddress(address,uid);
+		if(notetype==null){
+			resultInfo.setCode(1);
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("已存在此地址!!");
+		}
+		
+		return resultInfo;
+	}
+	/*
+	 * 添加或修改
+	 */
+	public ResultInfo<NoteType> addorupdate(String address, String aid, String isdefault, Integer uid) {
+		ResultInfo<NoteType> resultInfo=new ResultInfo<>();
+		if(StringUtil.isEmpty(address)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("地址不能为空!");
+			return resultInfo;
+		}
+		//验证地址唯一
+		ResultInfo<NoteType> res=checkaddress(uid,address);
+		if(res.getCode()== 0){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("地址不能重复");
+			return resultInfo;
+		}
+		//调用Dao层方法
+		int row=addressDao.addorupdate(address,aid,isdefault,uid);
+		//判断受影响的行数
+		if(row>0){
+			resultInfo.setCode(1);
+			if(StringUtil.isEmpty(aid)){
+				NoteType note=addressDao.checkaddress(address,uid);
+				resultInfo.setResult(note);
+			}
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("地址更新失败");
+		}
+		return resultInfo;
+	}
+
+
+}

@@ -1,0 +1,136 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+ <!-- About Us -->
+        <section class="about-us-area pt-100 pb-70">
+            <div class="container"> 
+                <div class="row"> 
+                    <div class="col-lg-6"> 
+                        <div class="row"> 
+                            <div class="col-6 col-sm-6 col-lg-6 xs-pr">
+                                <div class="mb-30">
+                                    <img src="assets/img/welcome-1.jpg" class="radius-5" alt="Welcome Image">
+                                </div>
+                                <div class="mb-30">
+                                    <img src="assets/img/welcome-3.jpg" class="radius-5" alt="Welcome Image">
+                                </div>
+                            </div>
+                            <div class="col-6 col-sm-6 col-lg-6 xs-pl"> 
+                                <div class="mb-30">
+                                    <img src="assets/img/welcome-2.jpg" class="radius-5" alt="Welcome Image">
+                                </div>
+                                <img src="assets/img/welcome-4.jpg" class="radius-5" alt="Welcome Image">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6"> 
+                        <div class="about-us-text mt-60">
+                            <h4>Welcome To Education</h4>
+                            <h2>50 Years of Experience in Education</h2>
+                            <h5>We are ready to build your dream future Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolorum, beatae.</h5>
+                            
+                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                            
+                            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae abveritatis quasi architecto beatae vitae dicta sunt explicabo.</p>
+                            
+                            <a href="about-us.html" class="default-btn">About Us</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- End About Us -->
+
+        <!-- Why choose us -->
+        <section class="why-choose-us gray-bg ptb-100">
+            <div class="container">
+                <div class="section-header">
+                    <i class="icofont-education"></i>
+                    <h2>Why Choose us</h2>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod  labore et dolore magna aliqua.</p>
+                </div>
+                
+                <div class="row"> 
+                    <div class="col-md-6 col-lg-4"> 
+                        <div class="single-reason mb-50">
+                            <div class="reason-icon">
+                                <i class="icofont-man-in-glasses"></i>
+                            </div>
+                            <h3>Experienced Tutor</h3>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor labore et dolore magna aliqua. </p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-4"> 
+                        <div class="single-reason active-hover mb-50">
+                            <div class="reason-icon">
+                                <i class="icofont-book-alt"></i>
+                            </div>
+                            <h3>Popular Courses</h3>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor labore et dolore magna aliqua. </p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4"> 
+                        <div class="single-reason mb-50">
+                            <div class="reason-icon">
+                                <i class="icofont-live-support"></i>
+                            </div>
+                            <h3>24/7 Hours Support</h3>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor labore et dolore magna aliqua. </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="video-content mb-minus-355">
+                    <div class="d-table"> 
+                        <div class="d-tablecell">
+                            <div class="sonar-wrapper">
+                                <div class="sonar-emitter">
+                                    <a href="https://www.bjsxt.com/speech/1815.html" class="play-icon popup-youtube">
+                                        <i class="icofont-play"></i>
+                                    </a>
+                                    <div class="sonar-wave"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- End Why choose us -->
+      
+        <!-- Counter Area -->
+        <div class="counter-area pt-350">
+            <div class="container"> 
+                <div class="row"> 
+                    <div class="col-sm-6 col-md-6 col-lg-3"> 
+                        <div class="single-counter">
+                            <h3><span class="counter">12500</span>+</h3>
+                            <span class="sub-title">Students</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-sm-6 col-md-6 col-lg-3"> 
+                        <div class="single-counter">
+                            <h3><span class="counter">350</span>+</h3>
+                            <span class="sub-title">Courses</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-sm-6 col-md-6 col-lg-3"> 
+                        <div class="single-counter">
+                            <h3><span class="counter">50</span>+</h3>
+                            <span class="sub-title">Years of experience</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-sm-6 col-md-6 col-lg-3"> 
+                        <div class="single-counter">
+                            <h3><span class="counter">100</span>+</h3>
+                            <span class="sub-title">Teachers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Counter Area -->

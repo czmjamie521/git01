@@ -1,0 +1,53 @@
+package com.web;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.Service.AddressService;
+import com.po.NoteType;
+import com.sxt.util.JsonUtil;
+import com.sxt.util.ResultInfo;
+
+/**
+ * Servlet implementation class AddressServlet
+ */
+@WebServlet("/addressServlet")
+public class AddressServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	private AddressService addressService = new AddressService();
+	
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String actionName = request.getParameter("actionName");
+		
+		if("search".equals(actionName)){
+			searchAddress(request,response);
+		}else if("delete".equals(actionName)){
+			deleteAddresss(request,response);
+		}
+	}
+
+	private void deleteAddresss(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String aid=request.getParameter("aid");
+		ResultInfo<NoteType> resultInfo=addressService.deleteAddress(aid);
+		
+		JsonUtil.toJson(response, resultInfo);
+	}
+
+	private void searchAddress(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		Integer uid=1;
+		
+		ResultInfo<List<NoteType> >resultInfo=addressService.findAddress(uid);
+		request.setAttribute("resultInfo", resultInfo);
+		
+		
+		request.getRequestDispatcher("address.jsp").forward(request, response);
+		
+	}
+
+}

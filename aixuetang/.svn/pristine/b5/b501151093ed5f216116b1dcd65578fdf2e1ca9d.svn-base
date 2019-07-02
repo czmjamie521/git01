@@ -1,0 +1,62 @@
+package com.shsxt.userWeb;
+
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.shsxt.userservice.UserService;
+import com.sxt.util.JsonUtil;
+import com.sxt.util.ResultInfo;
+import com.sxt.util.User;
+
+/**
+ * Servlet implementation class Userservlet
+ */
+@WebServlet("/userservlet")
+public class Userservlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	private UserService userservice = new UserService();
+	/**
+	 * @see HttpServlet#service(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//接收ajax给的方法名actionname
+		String actionName=request.getParameter("actionName");
+		if("checkuname".equals(actionName)){
+			userCheck(request,response);
+		}else if("login".equals(actionName)){
+			userLogin(request,response);
+		}else if("logining".equals(actionName)){
+			userLogining(request,response);
+		}
+	}
+	private void userLogining(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//给页面存一个域对象
+		request.setAttribute("changePage", "Login.jsp");
+		//请求转发到主页
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);;
+		
+	}
+	private void userLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		//接收参数ajax传来的uname参数
+		String uname=request.getParameter("uname");
+		String upwd=request.getParameter("upwd");
+		//接收service层的resultinfo
+		ResultInfo<User> resultinfo=userservice.loginByName(uname,upwd);
+		request.getSession().setAttribute("user", resultinfo.getResult());
+		//用json对象提交
+		JsonUtil.toJson(response, resultinfo);
+	}
+	private void userCheck(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		//接收参数ajax传来的uname参数
+		String uname=request.getParameter("uname");
+		//接收service层resultinfo
+		ResultInfo<User> resultinfo=userservice.checkByUname(uname);
+		System.out.println(resultinfo);
+		//向前台发送就送对象
+		JsonUtil.toJson(response, resultinfo);
+	}
+}

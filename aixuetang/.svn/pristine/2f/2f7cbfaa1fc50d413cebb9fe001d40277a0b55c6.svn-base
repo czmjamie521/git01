@@ -1,0 +1,30 @@
+package com.aixuetang.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.aixuetang.po.Course;
+import com.aixuetang.po.Teacher;
+import com.aixuetang.po.vo.ResultInfo;
+
+public class TeacherDao {
+
+	public List<Course> findcoursebyid(String teacherid) {
+	int num=Integer.parseInt(teacherid);
+	System.out.println(num);
+	String sql="select * from t_course where teacherid=?";
+	List<Object> params = new ArrayList<>();
+	params.add(num);
+
+	List<Course> list=BaseDao.queryRows(sql, params,Course.class);
+		return list;	
+	}
+
+	public ResultInfo<Course> cheakuser(String teacherid, Integer uid) {
+	int num=Integer.parseInt(teacherid);
+	//准备sql语句
+	String sql="select count(*)";
+		return null;
+	}
+
+}

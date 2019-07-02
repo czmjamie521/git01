@@ -1,0 +1,7 @@
+package com.sxt.order.service;
+
+import com.sxt.order.dao.OrderDao;
+
+public class OrderService {
+	private OrderDao orderDao =new OrderDao();
+}

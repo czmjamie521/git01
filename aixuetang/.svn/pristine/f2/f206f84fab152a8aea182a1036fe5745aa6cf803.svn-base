@@ -1,0 +1,48 @@
+package com.aixuetang.po;
+
+public class Comment {
+	private String commentid;
+	private String content;
+	private Integer uid;    //用户Id    外键：是用户表的主键
+	private String publishtime;
+	private String parentcomment;
+	private String reply;    //评论回复     外键：
+	public String getCommentid() {
+		return commentid;
+	}
+	public void setCommentid(String commentid) {
+		this.commentid = commentid;
+	}
+	public String getContent() {
+		return content;
+	}
+	public void setContent(String content) {
+		this.content = content;
+	}
+	public Integer getUid() {
+		return uid;
+	}
+	public void setUid(Integer uid) {
+		this.uid = uid;
+	}
+	public String getPublishtime() {
+		return publishtime;
+	}
+	public void setPublishtime(String publishtime) {
+		this.publishtime = publishtime;
+	}
+	public String getParentcomment() {
+		return parentcomment;
+	}
+	public void setParentcomment(String parentcomment) {
+		this.parentcomment = parentcomment;
+	}
+	public String getReply() {
+		return reply;
+	}
+	public void setReply(String reply) {
+		this.reply = reply;
+	}
+	
+	
+}

@@ -1,0 +1,105 @@
+package com.Service;
+
+import java.util.List;
+
+import com.Dao.AddressDao;
+import com.po.Address;
+import com.po.Address;
+import com.sxt.util.ResultInfo;
+import com.util.StringUtil;
+
+
+public class AddressService {
+	private AddressDao addressDao = new AddressDao();
+	public ResultInfo<List<Address>> findAddress(Integer uid) {
+		List<Address> list = addressDao.findListByUserId(uid);
+		ResultInfo<List<Address>> resultInfo = new ResultInfo<>();
+		//�жϷǿ�
+		if(list==null||list.size()<1){
+			//���Ϊ��
+			resultInfo.setCode(0);
+			resultInfo.setMsg("�û��б�����");
+		}else{
+			//�����Ϊ��
+			resultInfo.setCode(1);
+			resultInfo.setResult(list);
+		}
+		
+		return resultInfo;
+	}
+	/*
+	 * ɾ��ָ����ַ
+	 */
+	public ResultInfo<Address> deleteAddress(String aid) {
+		ResultInfo<Address> resultInfo = new ResultInfo<>();
+		if(StringUtil.isEmpty(aid)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("��ַ������,������!!");
+			return resultInfo;
+		}
+		int row=addressDao.deleteAddress(aid);
+		if(row>0){
+			resultInfo.setCode(1);
+			
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("ɾ��ʧ��!");
+		}
+		return resultInfo;
+	}
+	/*
+	 * ��֤��ַΨһ
+	 */
+	public ResultInfo<Address> checkaddress(  Integer uid,String address) {
+		ResultInfo<Address> resultInfo=new ResultInfo<>();
+		if(StringUtil.isEmpty(address)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("��ַ����Ϊ��!!");
+			return resultInfo;
+		}
+		
+		Address notetype=addressDao.checkaddress(address,uid);
+		if(notetype==null){
+			resultInfo.setCode(1);
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("�Ѵ��ڴ˵�ַ!!");
+		}
+		
+		return resultInfo;
+	}
+	/*
+	 * ��ӻ��޸�
+	 */
+	public ResultInfo<Address> addorupdate(String address, String aid, String isdefault, Integer uid) {
+		ResultInfo<Address> resultInfo=new ResultInfo<>();
+		if(StringUtil.isEmpty(address)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("��ַ����Ϊ��!");
+			return resultInfo;
+		}
+		//��֤��ַΨһ
+		ResultInfo<Address> res=checkaddress(uid,address);
+		if(res.getCode()== 0){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("��ַ�����ظ�");
+			return resultInfo;
+		}
+		//����Dao�㷽��
+		int row=addressDao.addorupdate(address,aid,isdefault,uid);
+		//�ж���Ӱ�������
+		if(row>0){
+			resultInfo.setCode(1);
+			if(StringUtil.isEmpty(aid)){
+				Address note=addressDao.checkaddress(address,uid);
+				resultInfo.setResult(note);
+			}
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("��ַ����ʧ��");
+		}
+		return resultInfo;
+	}
+
+
+}

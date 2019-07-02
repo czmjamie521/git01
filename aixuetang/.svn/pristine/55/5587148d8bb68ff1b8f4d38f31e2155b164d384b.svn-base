@@ -1,0 +1,145 @@
+package com.sxt.order.dao;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
+import org.apache.commons.dbutils.handlers.MapHandler;
+import org.apache.commons.dbutils.handlers.MapListHandler;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
+
+import com.po.Address;
+import com.sxt.model.Course;
+import com.sxt.order.domain.Order;
+import com.sxt.order.domain.OrderItem;
+import com.sxt.util.DBUtil;
+
+import cn.itcast.commons.CommonUtils;
+
+public class OrderDao {
+	private QueryRunner qr =new QueryRunner();
+	private Connection conn =DBUtil.getConnection();
+	
+	//把t_orderitem表和 t_course表连表查的单记录 Map结果集, 映射为完整的 OrderItem对象
+	private OrderItem toOrderItem(Map<String, Object> map){
+		OrderItem orderItem =CommonUtils.toBean(map, OrderItem.class);
+		Course course =CommonUtils.toBean(map, Course.class);
+		orderItem.setCourse(course);
+		return orderItem;
+	}
+	
+	//把t_orderitem表和 t_course表连表查的 多记录Map结果集, 映射为完整的 OrderItem对象的集合
+	private List<OrderItem> toOrderItemList(List<Map<String, Object>> mapList){
+		List<OrderItem> list =new ArrayList<>();
+		for(Map<String, Object> map: mapList){
+			OrderItem o =toOrderItem(map);
+			list.add(o);
+		}
+		return list;
+	}
+	//对t_order 和t_address连表查询, 把单行的map记录映射为含有完整Address的Order对象的方法
+	private Order toOrder(Map<String, Object> map){
+		if(map ==null || map.size()==0) return null;
+		Order order =CommonUtils.toBean(map, Order.class);
+		Address address =CommonUtils.toBean(map, Address.class);
+		order.setAddr(address);
+		return order;
+	}
+	
+	//对t_order 和t_address连表查询, 把单行的map记录映射为含有完整Address的Order对象的方法
+	private List<Order> toOrderList(List<Map<String, Object>> mapList){
+		List<Order> orderList =new ArrayList<>();
+		for(Map<String, Object> map :mapList){
+			Order order =toOrder(map);
+			orderList.add(order);
+		}
+		return orderList;
+	}
+	
+	//分页用, 查询当前用户的总记录数
+	public long getTotalCount(Integer uid) throws SQLException {
+		String sql ="select count(1) from t_order where uid=?";
+		Number number =(Number)qr.query(conn, sql, new ScalarHandler(), uid);
+		return number.longValue();
+	}
+
+	/**
+	 * 前台查询所有订单, 根据分页信息(pageNum当前页, pageSize每个记录数)查询的 Order集合
+	 * @param uid
+	 * @param pageNum
+	 * @param pageSize
+	 * @return
+	 * @throws SQLException
+	 */
+	public List<Order> showOrder(Integer uid, Integer pageNum, Integer pageSize) throws SQLException {
+		String sql ="select orderid, ordertime, status, total, a.* FROM "+
+					"t_order o LEFT JOIN t_address a on o.aid =a.aid "+
+					"where o.uid=? limit ?,?";
+		List<Map<String, Object>> mapList =qr.query(conn, sql, new MapListHandler(), uid, 
+				pageSize*(pageNum-1), pageSize);
+		return toOrderList(mapList);
+	}
+
+	//创建 t_order中的一条记录
+	public void createOrder(String orderid, Integer uid, Date ordertime, Object object, Integer status, Double total) throws SQLException {
+		String sql ="insert into t_order values(?,?,?,?,?,?)";
+		qr.update(conn, sql, orderid, uid, ordertime, object, status, total);
+		
+	}
+
+	//创建 t_OrderItem中的多条记录
+	public void addOrderItems(Order order) throws SQLException {
+		//获取order中的 List<OrderItem>
+		List<OrderItem> list =order.getOrderitemlist();
+		String sql ="insert into t_orderitem values(?,?,?,?,?)";
+		for(OrderItem item :list){
+			//遍历Order下的 List<OrderItem>, 插入数据
+			qr.update(conn, sql, item.getOrderitemid(), item.getQuantity(),
+					item.getCourse().getCourseid(), order.getOrderid(), item.getSubtotal());
+		}
+	}
+
+	//返回 Address数组
+	public List<Address> findAddress(Integer uid) throws SQLException {
+		String sql ="select * from t_address where uid =?";
+		return qr.query(conn, sql, new BeanListHandler<Address>(Address.class), uid);
+	}
+
+	//根据 t_order的主键, 返回完整Order对象, 包括List<OrderItem> (不含Address对象)
+	public Order getOrderById(String orderid) throws SQLException {
+		String sql ="select * from t_order where orderid =?";
+		Order order =qr.query(conn, sql, new BeanHandler<Order>(Order.class), orderid);
+		
+		//连表查询OrderItem 和course
+		sql ="select orderitemid, quantity, subtotal, c.* from "+
+				"t_orderitem o LEFT JOIN t_course c on o.courseid =c.courseid "+
+				"where orderid =?";
+		List<Map<String, Object>> mapList =qr.query(conn, sql, new MapListHandler(), orderid);
+		List<OrderItem> list = toOrderItemList(mapList);
+		order.setOrderitemlist(list);
+		
+		
+		return order;
+	}
+
+	//为订单设置地址信息
+	public void updateAddr(String orderid, Integer aid, String addr) throws SQLException {
+		String sql ="update t_order set aid=? where orderid=?";
+		qr.update(conn, sql, aid, orderid);
+		
+	}
+
+	//用户再次进入订单详情页, 查找当前用户的 地址信息
+	public Address findSingleAddress(String orderid) throws SQLException {
+		String sql ="select o.*, a.address, a.isdefault from "+
+					"t_order o LEFT JOIN t_address a on o.aid =a.aid "+
+					"where orderid =?";
+		return qr.query(conn, sql, new BeanHandler<Address>(Address.class), orderid);
+	}
+}

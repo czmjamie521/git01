@@ -1,0 +1,82 @@
+package com.sxt.cartitem.web.servlet;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.sxt.cartitem.dao.CartDao;
+import com.sxt.cartitem.domain.CartItem;
+import com.sxt.cartitem.service.CartService;
+import com.sxt.user.po.User;
+
+/**
+ * Servlet implementation class CartServlet
+ */
+@WebServlet("/cart")
+public class CartServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	private CartService cartService =new CartService();
+	private CartDao cartDao =new CartDao();
+
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String actionName =request.getParameter("actionName");
+		switch(actionName){
+		case "imitateLogin":
+			imitateLogin(request, response);
+			break;
+		case "add":
+			add(request, response);
+			break;
+		case "showCart":
+			showCart(request, response);
+			break;
+		}
+		
+	}
+	
+	/**
+	 * mainweb.jsp 点击"显示购物车", 或courseshop.jsp点击"加入包袱", 都会调用此方法
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void showCart(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//得到当前Session 中的User
+		User user =(User) request.getSession().getAttribute("user");
+		Integer uid =user.getUid();
+		
+		//调下层, 获得List<CartItem>
+		List<CartItem> cartItemList =cartService.showCart(uid);
+		//设置list到前台, 设置动态页面
+		request.setAttribute("cartItemList", cartItemList);
+		request.setAttribute("changePage", "jsps/cart/list.jsp");
+		
+		//请求转发
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+	}
+
+	/**
+	 * courseshop.jsp 中, 点击"加入包袱", 调用此方法添加到购物车
+	 * @param request
+	 * @param response
+	 */
+	private void add(HttpServletRequest request, HttpServletResponse response) {
+		// TODO 
+		
+	}
+
+	//模拟前台登录
+	private void imitateLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		User user =new User(101,"zzy","zzy","13817758003",0.00,null);
+		request.getSession().setAttribute("user", user);
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+		
+	}
+
+}

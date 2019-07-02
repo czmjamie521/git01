@@ -1,0 +1,56 @@
+function deleteType(typeId) {
+	// 弹出提示框询问用户是否确认删除
+	swal({ 
+		  title: "你确定要删除这条记录吗？", 
+		  text: "", 
+		  type: "warning",
+		  showCancelButton: true, 
+		  confirmButtonColor: "orange",
+		  confirmButtonText: "确定",
+		  cancelButtonText: "取消"
+	}).then(function(){
+		  // 发送ajax请求，删除指定类型的记录
+		  $.ajax({
+			  type:"post",
+			  url:"addressServlet",
+			  data:{
+				  actionName:"delete",
+				  aid:aid
+			  },
+			  success:function(result) {
+				  // 判断是否删除成功
+				  if (result.code == 1) {
+					  // 删除成功
+					  // 提示用户删除成功
+					  swal(result.msg,"","success");
+					  // 删除的DOM操作
+					  deleteDom(aid);
+				  } else {
+					// 提示用户删除失败
+					  swal("删除失败！","","error");
+				  }
+			  }
+		  });
+	});
+}
+
+
+function deleteDom(aid) {
+	
+	
+	// 1、得到table对象
+	var myTable = $("#myTable");
+	// 2、得到table对象的子元素tr （得到table的子元素tbody，再得到子元素tr）
+	var trs = myTable.children().children();
+	// 3、判断tr的长度
+	if (trs.length > 2) {
+		// 如果大于2（表头+多条类型记录），直接移除指定tr对象  （tr元素添加id属性值，id="tr_" + typeId）
+		$("#tr_" + aid).remove();
+	} else {
+		// 如果等于2，（表头+1条类型记录），移除整个table对象，并设置提示信息 （给table的父元素div,绑定id属性值）
+		myTable.remove();
+		$("#myDiv").html("<h2>暂未查询到类型记录！</h2>");
+	}
+	
+	
+}

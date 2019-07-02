@@ -1,0 +1,125 @@
+package com.sxt.cartitem.web.servlet;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.sxt.cartitem.dao.CartDao;
+import com.sxt.cartitem.domain.CartItem;
+import com.sxt.cartitem.service.CartService;
+import com.sxt.user.po.User;
+import com.sxt.util.JsonUtil;
+
+/**
+ * Servlet implementation class CartServlet
+ */
+@WebServlet("/cart")
+public class CartServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	private CartService cartService =new CartService();
+	private CartDao cartDao =new CartDao();
+
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String actionName =request.getParameter("actionName");
+		switch(actionName){
+		case "imitateLogin":
+			imitateLogin(request, response);
+			break;
+		case "add":
+			add(request, response);
+			break;
+		case "showCart":
+			showCart(request, response);
+			break;
+		case "cartdelete":
+			cartdelete(request, response);
+			break;
+		case "updateQuantity":
+			updateQuantity(request, response);
+			break;
+		}
+		
+	}
+	
+	/**
+	 * 前台对购物车条目数做增减, 调用此方法同步调整数据库
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 */
+	private void updateQuantity(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String cartItemId =request.getParameter("cartItemId");
+		Integer quantity =Integer.valueOf(request.getParameter("quantity"));
+		
+		//调下层, 执行update
+		cartService.update(cartItemId, quantity);
+		//根据cartItemid, 查询更新后的 CartItem对象
+		CartItem cartItem =cartService.findCartItem(cartItemId);
+		JsonUtil.toJson(response, cartItem);
+	}
+
+	/**
+	 * 购物车条目批量删除, 参数为选中的 cartItemId组成的数组
+	 * @param request
+	 * @param response
+	 */
+	private void cartdelete(HttpServletRequest request, HttpServletResponse response) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * mainweb.jsp 点击"显示购物车", 或courseshop.jsp点击"加入包袱", 都会调用此方法
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void showCart(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//得到当前Session 中的User
+		User user =(User) request.getSession().getAttribute("user");
+		Integer uid =user.getUid();
+		
+		//调下层, 获得List<CartItem>
+		List<CartItem> cartItemList =cartService.showCart(uid);
+		//设置list到前台, 设置动态页面
+		request.setAttribute("cartItemList", cartItemList);
+		request.setAttribute("changePage", "jsps/cart/list.jsp");
+		
+		//请求转发
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+	}
+
+	/**
+	 * courseshop.jsp 中, 点击"加入包袱", 调用此方法添加到购物车
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void add(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//根据添加的courseID 当前的uid 完成业务
+		Integer courseid =Integer.valueOf(request.getParameter("courseid"));
+		Integer uid =((User)request.getSession().getAttribute("user")).getUid();
+		
+		//调用下层完成业务
+		cartService.add(courseid, uid);
+		
+		//完成业务, 调用showCart()显示现存的 CartItem
+		showCart(request, response);
+	}
+
+	//模拟前台登录
+	private void imitateLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		User user =new User(101,"zzy","zzy","13817758003",0.00,null);
+		request.getSession().setAttribute("user", user);
+		request.getRequestDispatcher("mainweb.jsp").forward(request, response);
+		
+	}
+
+}

@@ -1,0 +1,83 @@
+package com.web;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.Service.AddressService;
+import com.po.Address;
+import com.util.JsonUtil;
+import com.sxt.util.ResultInfo;
+import com.sxt.util.User;
+
+/**
+		}
+ * Servlet implementation class AddressServlet
+ */
+@WebServlet("/addressServlet")
+public class AddressServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	private AddressService addressService = new AddressService();
+	
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String actionName = request.getParameter("actionName");
+		
+		if("searchAddress".equals(actionName)){
+			searchAddress(request,response);
+		}else if("deleteAddresss".equals(actionName)){
+			deleteAddresss(request,response);
+		}else if("addorupdate".equals(actionName)){
+			addorupdate(request,response);
+		}else if("checkAddress".equals(actionName)){
+			checkAddress(request,response);
+		}
+	}
+
+	private void addorupdate(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String address=request.getParameter("address");
+		String aid=request.getParameter("aid");
+		String isdefault=request.getParameter("isdefault");
+		Integer uid =((User)request.getSession().getAttribute("user")).getUid();
+		
+		ResultInfo<Address> resultInfo=addressService.addorupdate(address,aid,isdefault,uid);
+		JsonUtil.toJson(response, resultInfo);
+		
+	}
+
+	private void checkAddress(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String isdefault=request.getParameter("isdefault");
+		String aid=request.getParameter("aid");
+		String address=request.getParameter("address");
+		
+		Integer uid =((User)request.getSession().getAttribute("user")).getUid();
+		ResultInfo <Address> resultInfo=addressService.checkaddress(uid,address);
+		JsonUtil.toJson(response, resultInfo);
+	}
+
+	//前台删除地址
+	private void deleteAddresss(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String aid=request.getParameter("aid");
+		ResultInfo<Address> resultInfo=addressService.deleteAddress(aid);
+		
+		JsonUtil.toJson(response, resultInfo);
+	}
+
+	//根据当前域对象的 User, 查找 Address的集合
+	private void searchAddress(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		Integer uid =((User)request.getSession().getAttribute("user")).getUid();
+		String orderid =request.getParameter("orderid");
+		
+		ResultInfo<List<Address>>resultInfo=addressService.findAddress(uid);
+		request.setAttribute("resultInfo", resultInfo);
+		
+		
+		request.getRequestDispatcher("address.jsp").forward(request, response);
+		
+	}
+
+}

@@ -1,0 +1,27 @@
+package com.sxt.cartitem.service;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import com.sxt.cartitem.dao.CartDao;
+import com.sxt.cartitem.domain.CartItem;
+
+/**
+ * 购物车业务层
+ * @author robbyzhan
+ *
+ */
+public class CartService {
+	private CartDao cartDao =new CartDao();
+	
+	//显示购物车
+	public List<CartItem> showCart(Integer uid) {
+		//直接调用下层
+		try {
+			List<CartItem> cartItemList =cartDao.showCart(uid);
+			return cartItemList;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+}

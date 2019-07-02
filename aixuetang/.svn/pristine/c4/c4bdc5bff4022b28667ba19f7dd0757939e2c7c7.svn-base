@@ -1,0 +1,28 @@
+package com.Dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.po.Address;
+import com.po.NoteType;
+import com.Dao.BaseDao;
+
+public class AddressDao {
+
+	public List<NoteType> findListByUserId(Integer uid) {
+		String sql = "select * from t_address where uid = ?";
+		List<Object>params=new ArrayList<>();
+		params.add(uid);
+		List<NoteType> list = BaseDao.queryRows(sql, params, Address.class);
+		return list;
+	}
+
+	public int deleteAddress(String aid) {
+		String sql="delete from t_address where aid = ?";
+		List<Object> params=new ArrayList<>();
+		params.add(aid);
+		int row=BaseDao.executeUpdate(sql, params);
+		return row;
+	}
+
+}

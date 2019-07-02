@@ -1,0 +1,156 @@
+package com.address.dao;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
+
+import com.Dao.BaseDao;
+import com.address.po.Address;
+import com.sxt.util.DBUtil;
+import com.sxt.util.ResultInfo;
+import com.util.StringUtil;
+
+public class AddressDao {
+	private QueryRunner qr =new QueryRunner();
+	private Connection conn =DBUtil.getConnection();
+
+	//根据uid 查找对应的记录数
+	private Integer findCountByUid(Integer uid) throws SQLException{
+		Integer count =0;
+		String sql ="select count(1) from t_user where uid=?";
+		Number number =(Number)qr.query(conn, sql, new ScalarHandler(), uid);
+		if(null !=number){
+			count =number.intValue();
+		}
+		return count;
+	}
+	
+	//根据uid 查找对应的地址列表, 用于前台显示
+	public List<Address> findListByUserId(Integer uid) {
+		String sql = "select * from t_address where uid = ?";
+		List<Object>params=new ArrayList<>();
+		params.add(uid);
+		List<Address> list = BaseDao.queryRows(sql, params, Address.class);
+		return list;
+	}
+		//删锟斤拷指锟斤拷锟斤拷址
+	public int deleteAddress(String aid) {
+		String sql="delete from t_address where aid = ?";
+		List<Object> params=new ArrayList<>();
+		params.add(aid);
+		int row=BaseDao.executeUpdate(sql, params);
+		return row;
+	}
+	
+	//验证地址唯一, 如果有Address 对象返回, 证明地址不唯一; 否则地址唯一
+	public Address checkaddress(String address, Integer uid,String aid) {
+		String sql="select *from t_address where address= ? and uid= ? and aid!=? ";
+		
+		List<Object>params=new ArrayList<>();
+		params.add(address);
+		params.add(uid);
+		params.add(aid);
+		Address notetype=(Address) BaseDao.queryRow(sql, params, Address.class);
+		return notetype;
+	}
+
+	//添加或修改业务
+	public ResultInfo<List<Address>> addorupdate(String address, String aid, String isdefault, Integer uid) throws SQLException {
+		ResultInfo<List<Address>> resultInfo =new ResultInfo<>();
+		//定义sql语句
+		String sql="";
+		
+		//如果aid 为空, 说明调用了 添加方法
+		if(StringUtil.isEmpty(aid)){
+			
+			
+			//如果 isdefault 为0, 非默认地址, 需要判断当前uid对应的记录数
+			if("0".equals(isdefault)){
+				
+				if(findCountByUid(uid) ==0){
+					//当前没有记录, 新增第一条, 则设为默认记录
+					sql="insert into t_address (address,uid,isdefault) values (?,?,?)";
+					resultInfo.setCode( qr.update(conn, sql, address, uid, 1));
+				}else{
+					//当前有记录
+					//新增非默认的记录
+					sql="insert into t_address (address,uid,isdefault) values (?,?,?)";
+					resultInfo.setCode( qr.update(conn, sql, address, uid, 0));
+					
+				}
+				
+			}else{
+				// isdefault =1, 新增的是默认地址
+				// 先设置所有地址非默认
+				sql ="update t_address set isdefault =0 where uid=?";
+				qr.update(conn, sql, uid);
+				//新增一条默认记录
+				sql="insert into t_address (address,uid,isdefault) values (?,?,?)";
+				resultInfo.setCode(qr.update(conn, sql, address, uid, 1));
+			}
+			//设置添加成功的信息
+			resultInfo.setMsg("添加成功!");
+			
+		}else{
+			//aid 非空, 说明调用了修改方法; 查询当前地址, 判断是否为默认
+			Address addr =findAddressById(aid);
+			if(addr.getIsdefault() ==0){
+				//原记录不是默认
+				if("0".equals(isdefault)){
+					//原纪录非默认, 改成非默认
+					sql="update t_address set address = ?, isdefault=? where aid = ?";
+					resultInfo.setCode( qr.update(conn, sql, address, 0, aid));
+				}else{
+					//非默认改默认
+					//先把所有记录改为非默认, 
+					sql ="update t_address set isdefault =0 where uid=?";
+					qr.update(conn, sql, uid);
+					//再把当前记录改为默认
+					sql ="update t_address set address = ?, isdefault=? where aid = ?";
+					resultInfo.setCode(qr.update(conn, sql, address, 1, aid));
+				}
+				//设置修改成功信息
+				resultInfo.setMsg("修改成功");
+			}else{
+				//原记录是默认
+				if("1".equals(isdefault)){
+					//原记录是默认, 改默认
+					sql="update t_address set address = ?, isdefault=? where aid = ?";
+					resultInfo.setCode( qr.update(conn, sql, address, 1, aid));
+					resultInfo.setMsg("修改成功");
+				}else{
+					//原记录是默认, 改非默认, 判断是否是唯一记录
+					if(findCountByUid(uid) ==1){
+						//是, 则不允许修改, 需要先添加新纪录
+						resultInfo.setCode(0);
+						resultInfo.setMsg("这是唯一的地址 ,请先添加新地址作为默认地址!");
+					}else{
+						//不是唯一的默认记录, 提示设置新的默认记录
+						resultInfo.setCode(0);
+						resultInfo.setMsg("请设置其他地址为默认地址!");
+					}
+					
+				}
+				
+				
+			}
+			
+		}
+		
+		return resultInfo;
+	}
+	
+	//前台删除地址, 需要查询其是否为默认, 调用此方法返回 Address对象
+	public Address findAddressById(String aid) throws SQLException {
+		String sql ="select * from t_address where aid=?";
+		return qr.query(conn, sql, new BeanHandler<Address>(Address.class), aid);
+	}
+
+	
+
+}

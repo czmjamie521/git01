@@ -1,0 +1,91 @@
+package com.shsxt.userdao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.sxt.model.BaseDao;
+import com.sxt.util.DBUtil;
+import com.sxt.util.User;
+
+public class UserDao {
+	public static void main(String[] args) {
+		UserDao userdao=new UserDao();
+		
+		System.out.println(userdao.checkUname("lisi"));
+	}
+	public User checkUname(String uname) {
+		User user=null;
+		Connection connection=null;
+		PreparedStatement preparaedstatement=null;
+		ResultSet resultset=null;
+		//连接数据库
+		connection=DBUtil.getConnection();
+		//准备sql语句
+		String sql="select*from t_user where uname=? ";
+		//执行sql语句
+		try {
+			preparaedstatement=connection.prepareStatement(sql);
+			//配置对象
+			preparaedstatement.setString(1, uname);
+			//获取结果集
+			resultset=preparaedstatement.executeQuery();
+			if(resultset.next()){
+				user=new User();
+				user.setUid(resultset.getInt("uid"));
+				user.setUname(resultset.getString("uname"));
+				
+				
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally {
+			// 鍏抽棴璧勬簮
+			DBUtil.close(connection, preparaedstatement, resultset);
+		}
+		
+		return user;
+	}
+	public User loginunameandupwd(String uname, String upwd) {
+		
+			User user=null;
+			Connection connection=null;
+			PreparedStatement preparaedstatement=null;
+			ResultSet resultset=null;
+			//连接数据库
+			connection=DBUtil.getConnection();
+			//准备sql语句
+			String sql="select*from t_user where uname=?and upwd=? ";
+			//执行sql语句
+			try {
+				preparaedstatement=connection.prepareStatement(sql);
+				//配置对象
+				preparaedstatement.setString(1, uname);
+				preparaedstatement.setString(2, upwd);
+				//获取结果集
+				resultset=preparaedstatement.executeQuery();
+				if(resultset.next()){
+					user=new User();
+					user.setUid(resultset.getInt("uid"));
+					user.setUname(resultset.getString("uname"));
+					user.setUpwd(resultset.getString("upwd"));
+					user.setPhone(resultset.getString("phone"));
+					user.setBalance(resultset.getDouble("balance"));
+				}
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}finally {
+				// 鍏抽棴璧勬簮
+				DBUtil.close(connection, preparaedstatement, resultset);
+			}
+			
+			return user;
+		
+	}
+
+}

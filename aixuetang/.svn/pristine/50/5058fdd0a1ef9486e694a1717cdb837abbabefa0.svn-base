@@ -1,0 +1,161 @@
+package com.sxt.cartitem.dao;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.dbutils.handlers.MapHandler;
+import org.apache.commons.dbutils.handlers.MapListHandler;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
+
+import com.sxt.cartitem.domain.CartItem;
+import com.sxt.model.Course;
+import com.sxt.util.DBUtil;
+
+import cn.itcast.commons.CommonUtils;
+
+/**
+ * 购物车持久层
+ * @author robbyzhan
+ *
+ */
+public class CartDao {
+	QueryRunner qr =new QueryRunner();
+	Connection conn =DBUtil.getConnection();
+	
+	/**
+	 * 把对应单行结果集的Map, 映射到相应的JavaBean中, 使得CartItem包含完整课程信息
+	 * @param map
+	 * @return
+	 */
+	private CartItem toCartItem(Map<String, Object> map){
+		if(null ==map || map.size() ==0) return null;
+		
+		CartItem cartItem =CommonUtils.toBean(map, CartItem.class);
+		Course course =CommonUtils.toBean(map, Course.class);
+		cartItem.setCourse(course);
+		return cartItem;
+	}
+	
+	/**
+	 * 把对应多行结果集的 mapList, 映射到相应的 List<Bean>中, 使得每个Bean包含完整课程信息
+	 * @param mapList
+	 * @return
+	 */
+	private List<CartItem> toCartItemList(List<Map<String, Object>> mapList){
+		List<CartItem> cartItemList =new ArrayList<>();
+		for(Map<String, Object> map: mapList){
+			CartItem c =toCartItem(map);
+			cartItemList.add(c);
+		}
+		return cartItemList;
+	}
+	
+	/**
+	 * 用户批量删除购物车条目使用, 拼接sql的where子句  cartitemid in (?,?,...)
+	 * @param len
+	 * @return
+	 */
+	private String toWhereSql(int len){
+		StringBuilder sb =new StringBuilder("cartitemid in(");
+		for(int i=0;i<len;i++){
+			sb.append("?");
+			if(i<len-1){
+				sb.append(",");
+			}
+		}
+		sb.append(")");
+		return sb.toString();
+	}
+	/**
+	 * 前台点击显示购物车
+	 * @param uid   当前用户的id
+	 * @return
+	 * @throws SQLException 
+	 */
+	public List<CartItem> showCart(Integer uid) throws SQLException {
+		String sql ="select cart.cartitemid, cart.quantity, course.* "+ 
+				"from t_cartitem cart LEFT JOIN t_course course on cart.courseid =course.courseid "+
+				"where uid =?";	
+		List<Map<String, Object>> mapList =qr.query(conn, sql, new MapListHandler(), uid);
+		return toCartItemList(mapList);
+	}
+	
+	//添加购物车时, 通过此方法查询  当前添加的条目是否已存在
+	public CartItem checkExist(Integer courseid, Integer uid) throws SQLException {
+		String sql ="select * from t_cartitem where courseid=? and uid=?";
+		Map<String, Object> map =qr.query(conn, sql, new MapHandler(), courseid, uid);
+		return toCartItem(map);
+	}
+	
+	//通过courseid  查询对应价格
+	public Double checkPriceByCourseid(Integer courseid) throws SQLException {
+		String sql ="select price from t_course where courseid=?";
+		Number number =(Number)qr.query(conn, sql, new ScalarHandler(), courseid);
+		return number.doubleValue();
+	}
+	
+	/**
+	 * 执行插入条目操作
+	 * @param cartItem
+	 * @param uid
+	 * @throws SQLException 
+	 */
+	public void add(CartItem cartItem,Integer courseid, Integer uid) throws SQLException {
+		String sql ="insert into t_cartitem values(?,?,?,?)";
+		Object[] objs =new Object[]{cartItem.getCartitemid(), courseid, uid,cartItem.getQuantity()};
+		qr.update(conn, sql, objs);
+		
+	}
+	
+	/**
+	 * 用户增加购物车条目数时, 执行更改条目数量操作
+	 * @param courseid
+	 * @param uid
+	 * @param quantity
+	 * @throws SQLException 
+	 */
+	public void updateQuantity(Integer courseid, Integer uid, Integer quantity) throws SQLException {
+		String sql ="update t_cartitem set quantity=? where courseid=? and uid=?";
+		qr.update(conn, sql, quantity, courseid, uid);
+		
+	}
+	
+	//根据主键, 更新数据库中quantity 的值
+	public void update(String cartItemId, Integer quantity) throws SQLException {
+		String sql ="update t_cartitem set quantity=? where cartitemid=?";
+		qr.update(conn, sql,quantity,cartItemId);
+		
+	}
+	
+	//根据给定的主键值, 寻找CartItem对象
+	public CartItem findCartItem(String cartItemId) throws SQLException {
+		String sql ="select cartitemid, cart.quantity, course.* "+ 
+				"from t_cartitem cart LEFT JOIN t_course course on cart.courseid =course.courseid "+
+				"where cartitemid=?";	
+		Map<String, Object> map =qr.query(conn, sql, new MapHandler(), cartItemId);
+		
+		return toCartItem(map);
+	}
+
+	/**
+	 * 前台批量删除购物车条目  执行此方法
+	 * @param cartItemIds
+	 * @throws SQLException 
+	 */
+	public void cartdelete(String cartItemIds) throws SQLException {
+		//前台传来的cartItemIds 转化为数组
+		Object[] cartItemArray = cartItemIds.split(",");
+		String whereSql =toWhereSql(cartItemArray.length);
+		//拼接出完整的sql语句
+		String sql ="delete from t_cartitem where "+whereSql;
+		
+		//注意, 可变参数的类型必须是 Object[] 或者Object...
+		qr.update(conn, sql, cartItemArray);
+	}
+
+}

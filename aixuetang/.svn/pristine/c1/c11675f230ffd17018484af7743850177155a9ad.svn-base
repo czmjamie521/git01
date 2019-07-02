@@ -1,0 +1,27 @@
+function commentSubmit(courseid){
+	var  comment=$("#enterreview").val();
+	console.log('ss');
+	if(comment==null){
+		$("#warn").val("评论不能为空");
+		return;
+	}
+	$.ajax({
+	type:"post",
+	url:"commentservlet",
+	data:{
+		actionName:"commentSubmit",
+		comment:comment,
+		courseid:courseid
+	},
+		success:function(result){
+			if(result.code!=1){
+				alert();
+			}
+			
+		}
+
+	})
+	
+	
+	
+}

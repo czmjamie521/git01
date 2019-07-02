@@ -1,0 +1,83 @@
+package com.sxt.cartitem.service;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import com.sxt.cartitem.dao.CartDao;
+import com.sxt.cartitem.domain.CartItem;
+
+import cn.itcast.commons.CommonUtils;
+
+/**
+ * 购物车业务层
+ * @author robbyzhan
+ *
+ */
+public class CartService {
+	private CartDao cartDao =new CartDao();
+	
+	//显示购物车
+	public List<CartItem> showCart(Integer uid) {
+		//直接调用下层
+		try {
+			List<CartItem> cartItemList =cartDao.showCart(uid);
+			return cartItemList;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * 添加购物车功能, 为当前uid 的用户添加 courseID 的课程
+	 * @param courseid
+	 * @param uid
+	 */
+	public void add(Integer courseid, Integer uid) {
+		try {
+			//调用下层, 查询当前courseid, uid组合是否存在 条目
+			CartItem _cartItem =cartDao.checkExist(courseid, uid);
+			if(null ==_cartItem){
+				//不存在, 自行创建 CartItem 实体类, 插入到数据库
+				CartItem cartItem =new CartItem();
+				cartItem.setCartitemid(CommonUtils.uuid());	//创建随机主键
+				cartItem.setQuantity(1);	//默认条目数 1
+				
+				//查询Dao, 得到当前courseid 对应的price
+				Double price =cartDao.checkPriceByCourseid(courseid);
+				cartItem.setSubtotal(price * cartItem.getQuantity());  //设置条目小计
+				
+				//调用下层执行插入操作
+				cartDao.add(cartItem,courseid, uid);
+			}else{
+				//已存在  _cartItem 即数据库中 真实存在的条目
+				Integer quantity =_cartItem.getQuantity();	//得到真实存在的 条目数
+				quantity +=1;	//条目+1, 执行update
+				
+				cartDao.updateQuantity(courseid, uid, quantity);	//执行更改条目数量
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+	
+	//更新购物车条目数
+	public void update(String cartItemId, Integer quantity) {
+		try {
+			cartDao.update(cartItemId, quantity);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+	
+	//查询购物车条目
+	public CartItem findCartItem(String cartItemId) {
+		try {
+			return cartDao.findCartItem(cartItemId);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+}

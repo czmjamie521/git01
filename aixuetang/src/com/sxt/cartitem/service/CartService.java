@@ -1,0 +1,91 @@
+package com.sxt.cartitem.service;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import com.sxt.cartitem.dao.CartDao;
+import com.sxt.cartitem.domain.CartItem;
+import com.sxt.cartitem.exception.CartDeleteException;
+import com.sxt.order.exception.OrderException;
+
+import cn.itcast.commons.CommonUtils;
+
+/**
+ * 购物车业务层
+ * @author robbyzhan
+ *
+ */
+public class CartService {
+	private CartDao cartDao =new CartDao();
+	
+	//显示购物车
+	public List<CartItem> showCart(Integer uid) {
+		//直接调用下层
+		try {
+			List<CartItem> cartItemList =cartDao.showCart(uid);
+			return cartItemList;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * 添加购物车功能, 为当前uid 的用户添加 courseID 的课程
+	 * @param courseid
+	 * @param uid
+	 * @param amount 
+	 */
+	public void add(Integer courseid, Integer uid, Integer amount) {
+		try {
+			//调用下层, 查询当前courseid, uid组合是否存在 条目
+			CartItem _cartItem =cartDao.checkExist(courseid, uid);
+			if(null ==_cartItem){
+				//不存在, 自行创建 CartItem 实体类, 插入到数据库
+				CartItem cartItem =new CartItem();
+				cartItem.setCartitemid(CommonUtils.uuid());	//创建随机主键
+				cartItem.setQuantity(amount);	//条目数从0 增加到 amount
+				
+				//调用下层执行插入操作
+				cartDao.add(cartItem,courseid, uid);
+			}else{
+				//已存在  _cartItem 即数据库中 真实存在的条目
+				Integer quantity =_cartItem.getQuantity();	//得到真实存在的 条目数
+				quantity +=amount;	//条目+amount, 执行update
+				
+				cartDao.updateQuantity(courseid, uid, quantity);	//执行更改条目数量
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+	
+	//更新购物车条目数
+	public void update(String cartItemId,Integer quantity) {
+		try {
+			cartDao.update(cartItemId, quantity);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+	
+	//根据给定的主键, 查询购物车条目(含完整的course)
+	public CartItem findCartItem(String cartItemId) {
+		try {
+			return cartDao.findCartItem(cartItemId);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+
+	//批量删除购物车条目
+	public void cartdelete(String cartItemIds) throws CartDeleteException  {
+		try {
+			cartDao.cartdelete(cartItemIds);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+}

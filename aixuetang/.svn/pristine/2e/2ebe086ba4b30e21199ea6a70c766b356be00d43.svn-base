@@ -1,0 +1,46 @@
+package com.aixuetang.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.aixuetang.po.Teacher;
+import com.aixuetang.until.Page;
+import com.aixuetang.until.StringUtil;
+
+public class instuctorservletDao {
+
+	public long fingteacher() {
+		
+		String sql="select COUNT(*) FROM t_teacher";
+		long row=(long) BaseDao.findSingleVlaue(sql, null);
+		return row;
+	}
+
+	public List<Teacher> fingteacherAll(Integer pagenum, Integer pagesize, Integer index) {
+		//定义sql语句
+		String sql="select * from t_teacher limit ?,?";
+		//判断是否为空
+		List<Object> params = new ArrayList<>();
+		params.add(index);
+		params.add(pagesize);
+	 
+		List<Teacher> list=BaseDao.queryRows(sql, params,Teacher.class);
+		return list;
+	
+	}
+
+	public Teacher fingteachderbyid(String teacheid) {
+		Integer num=Integer.parseInt(teacheid);
+		String sql="select * FROM t_teacher where teacherid=?;";
+		List<Object> params = new ArrayList<>();
+		params.add(num);
+		Teacher t=(Teacher) BaseDao.queryRow(sql, params, Teacher.class);
+		
+		return t;
+		
+	}
+
+	
+	
+
+}

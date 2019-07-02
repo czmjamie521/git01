@@ -1,0 +1,48 @@
+package com.Service;
+
+import java.util.List;
+
+import com.Dao.AddressDao;
+import com.po.NoteType;
+
+import com.sxt.util.ResultInfo;
+import com.util.StringUtil;
+
+
+public class AddressService {
+	private AddressDao addressDao = new AddressDao();
+	public ResultInfo<List<NoteType>> findAddress(Integer uid) {
+		List<NoteType> list = addressDao.findListByUserId(uid);
+		ResultInfo<List<NoteType>> resultInfo = new ResultInfo<>();
+		//判断非空
+		if(list==null||list.size()<1){
+			//如果为空
+			resultInfo.setCode(0);
+			resultInfo.setMsg("用户列表不存在");
+		}else{
+			//如果不为空
+			resultInfo.setCode(1);
+			resultInfo.setResult(list);
+		}
+		
+		return resultInfo;
+	}
+	public ResultInfo<NoteType> deleteAddress(String aid) {
+		ResultInfo<NoteType> resultInfo = new ResultInfo<>();
+		if(StringUtil.isEmpty(aid)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("地址不存在,请重试!!");
+			return resultInfo;
+		}
+		int row=addressDao.deleteAddress(aid);
+		if(row>0){
+			resultInfo.setCode(1);
+			
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("删除失败!");
+		}
+		return resultInfo;
+	}
+
+}

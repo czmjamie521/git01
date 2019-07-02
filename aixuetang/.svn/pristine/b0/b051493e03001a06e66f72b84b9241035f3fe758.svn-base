@@ -1,0 +1,26 @@
+function commentSubmit(user){
+	var  comment=$("#enterreview").val();
+	if(comment==null){
+		$("#warn").val("评论不能为空");
+		return;
+	}
+	$.ajax({
+	type:"post",
+	url:"commentservlet",
+	data:{
+		actionname:"commentSubmit",
+		user:user,
+		comment:comment
+	}
+		
+		
+		
+		
+		
+		
+		
+	})
+	
+	
+	
+}

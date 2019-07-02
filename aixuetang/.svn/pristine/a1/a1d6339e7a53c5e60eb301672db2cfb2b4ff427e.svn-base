@@ -1,0 +1,198 @@
+package com.shsxt.userdao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.dbutils.QueryRunner;
+
+import com.sxt.model.BaseDao;
+import com.sxt.util.DBUtil;
+import com.sxt.util.User;
+
+
+public class UserDao {
+	private QueryRunner qr =new QueryRunner();
+	private Connection conn =DBUtil.getConnection();
+	
+	public static void main(String[] args) {
+		UserDao userdao=new UserDao();
+		
+		System.out.println(userdao.checkUname("lisi"));
+	}
+	public User checkUname(String uname) {
+		User user=null;
+		Connection connection=null;
+		PreparedStatement preparaedstatement=null;
+		ResultSet resultset=null;
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ¿ï¿½
+		connection=DBUtil.getConnection();
+		//×¼ï¿½ï¿½sqlï¿½ï¿½ï¿½
+		String sql="select*from t_user where uname=? ";
+		//Ö´ï¿½ï¿½sqlï¿½ï¿½ï¿½
+		try {
+			preparaedstatement=connection.prepareStatement(sql);
+			//ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½
+			preparaedstatement.setString(1, uname);
+			//ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½
+			resultset=preparaedstatement.executeQuery();
+			if(resultset.next()){
+				user=new User();
+				user.setUid(resultset.getInt("uid"));
+				user.setUname(resultset.getString("uname"));
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally {
+			// å…³é—­èµ„æº
+			DBUtil.close(connection, preparaedstatement, resultset);
+		}
+		
+		return user;
+	}
+	public User loginunameandupwd(String uname, String upwd) {
+		
+			User user=null;
+			Connection connection=null;
+			PreparedStatement preparaedstatement=null;
+			ResultSet resultset=null;
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ¿ï¿½
+			connection=DBUtil.getConnection();
+			//×¼ï¿½ï¿½sqlï¿½ï¿½ï¿½
+			String sql="select*from t_user where uname=?and upwd=? ";
+			//Ö´ï¿½ï¿½sqlï¿½ï¿½ï¿½
+			try {
+				preparaedstatement=connection.prepareStatement(sql);
+				//ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½
+				preparaedstatement.setString(1, uname);
+				preparaedstatement.setString(2, upwd);
+				//ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½
+				resultset=preparaedstatement.executeQuery();
+				if(resultset.next()){
+					user=new User();
+					user.setUid(resultset.getInt("uid"));
+					user.setUname(resultset.getString("uname"));
+					user.setUpwd(resultset.getString("upwd"));
+					user.setPhone(resultset.getString("phone"));
+					user.setBalance(resultset.getDouble("balance"));
+					
+					user.setEmail(resultset.getString("email"));
+				}
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}finally {
+				// å…³é—­èµ„æº
+				DBUtil.close(connection, preparaedstatement, resultset);
+			}
+			
+			return user;
+		
+	}
+	public int registerUser(String uname, String email, String phone, String upwd, String head) {
+		//×¼ï¿½ï¿½sqlï¿½ï¿½ï¿½
+		String sql="insert into t_user (uname,upwd,email,phone,head) values (?,?,?,?,?)";
+		//ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½
+		List<Object> params=new ArrayList();
+		params.add(uname);
+		params.add(upwd);
+		params.add(email);
+		params.add(phone);
+		params.add(head);
+		int row=BaseDao.executeUpdate(sql, params);
+		return row;
+		
+	}
+	//
+	public User uniqueByName(String uname) {
+		User user=null;
+		Connection connection=null;
+		PreparedStatement preparaedstatement=null;
+		ResultSet resultset=null;
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ¿ï¿½
+		connection=DBUtil.getConnection();
+		//×¼ï¿½ï¿½sqlï¿½ï¿½ï¿½
+		String sql="select*from t_user where uname=? ";
+		//Ö´ï¿½ï¿½sqlï¿½ï¿½ï¿½
+		try {
+			preparaedstatement=connection.prepareStatement(sql);
+			//ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½
+			preparaedstatement.setString(1, uname);
+			//ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½
+			resultset=preparaedstatement.executeQuery();
+			if(resultset.next()){
+				user=new User();
+				user.setUid(resultset.getInt("uid"));
+				user.setUname(resultset.getString("uname"));
+				
+				
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally {
+			// å…³é—­èµ„æº
+			DBUtil.close(connection, preparaedstatement, resultset);
+		}
+		
+		return user;
+		
+	}
+	public int payBalance(double balance, Integer uid) {
+		
+		//×¼ï¿½ï¿½sqlï¿½ï¿½ï¿½
+		String sql="update t_user set balance=balance+? where uid=?";
+		//ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½
+		List<Object> params=new ArrayList();
+		params.add(balance);
+		params.add(uid);
+		int row=BaseDao.executeUpdate(sql, params);
+		return row;
+	}
+	public User checkBalance(Integer uid) {
+		User user=null;
+		Connection connection=null;
+		PreparedStatement preparaedstatement=null;
+		ResultSet resultset=null;
+		//Á¬½ÓÊı¾İ¿â
+		connection=DBUtil.getConnection();
+		//×¼±¸sqlÓï¾ä
+		String sql="select*from t_user where uid=? ";
+		//Ö´ĞĞsqlÓï¾ä
+		try {
+			preparaedstatement=connection.prepareStatement(sql);
+			//ÅäÖÃ¶ÔÏó
+			preparaedstatement.setObject(1, uid);
+			//»ñÈ¡½á¹û¼¯
+			resultset=preparaedstatement.executeQuery();
+			if(resultset.next()){
+				user=new User();
+				user.setUid(resultset.getInt("uid"));
+				user.setUname(resultset.getString("uname"));
+				user.setUpwd(resultset.getString("upwd"));
+				user.setPhone(resultset.getString("phone"));
+				user.setBalance(resultset.getDouble("balance"));
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally {
+			// å…³é—­èµ„æº
+			DBUtil.close(connection, preparaedstatement, resultset);
+		}
+		return user;
+	}
+	
+	//è®¢å•ç¡®è®¤ç•Œé¢, ç”¨æˆ·ä¿®æ”¹æ‰‹æœºå·, è°ƒç”¨æ­¤æ–¹æ³•
+	public void updatePhone(Integer uid, String phone) throws SQLException {
+		String sql ="update t_user set phone=? where uid=?";
+		qr.update(conn, sql, phone, uid);
+		
+	}
+	
+
+}

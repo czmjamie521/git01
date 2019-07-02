@@ -1,0 +1,61 @@
+package com.sxt.service;
+import java.util.List;
+import com.sxt.Dao.Dao;
+import com.sxt.comment.CourseComment;
+import com.sxt.model.Course;
+import com.sxt.model.ShowTag;
+import com.sxt.util.Page;
+
+public class CourseService {
+    Dao Dao=new Dao();
+	public Page<Course> findCourselist(String pageNum, String searchTag, String limit, String searchTagid) {
+		Integer pageNumer=1;
+		if(pageNum!=null){
+			pageNumer=Integer.parseInt(pageNum);	
+		}
+		Integer pageSize;
+		if(limit==null){
+		 pageSize=9;
+		}else{
+		pageSize=Integer.parseInt(limit);
+		}
+		if(searchTagid!=null){
+			Integer tagId=Integer.parseInt(searchTagid);
+			searchTag=Dao.findTagNameBytagId(tagId);
+		}
+		long total = Dao.findNoteCountByUserId(searchTag);
+		if(total<1){
+			return null;
+		}
+		Integer index=(pageNumer-1)*pageSize;
+		List<Course> list=Dao.listCourse(pageSize,index,searchTag);
+		Page<Course> page = new Page<>(pageNumer, pageSize, total);
+		page.setDataList(list);
+		return page;
+		
+		
+	}
+	//查找标签栏
+	public List<ShowTag> findCourseTaglistByTag() {
+		List<ShowTag> list=Dao.listTag();
+		return list;
+	}
+	public Course findCourseBycourseid(String courseid) {
+		Course singleCourse=null;
+		if(courseid==null){
+			return singleCourse;	
+		}else{			
+			singleCourse=Dao.findSingleCourseBycourseid(courseid);
+		}
+		return singleCourse;
+	}
+	public List<CourseComment> findCourseCommentBycourseid(String courseid) {
+		List<CourseComment> list=Dao.listCourseComment(courseid);
+		if(list==null){
+			return null;
+		}
+		return list;
+	}
+	
+
+}

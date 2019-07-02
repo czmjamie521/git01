@@ -1,0 +1,105 @@
+package com.Service;
+
+import java.util.List;
+
+import com.Dao.AddressDao;
+import com.po.Address;
+import com.po.Address;
+import com.sxt.util.ResultInfo;
+import com.util.StringUtil;
+
+
+public class AddressService {
+	private AddressDao addressDao = new AddressDao();
+	public ResultInfo<List<Address>> findAddress(Integer uid) {
+		List<Address> list = addressDao.findListByUserId(uid);
+		ResultInfo<List<Address>> resultInfo = new ResultInfo<>();
+		//锟叫断非匡拷
+		if(list==null||list.size()<1){
+			//锟斤拷锟轿拷锟�
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟矫伙拷锟叫憋拷锟斤拷锟斤拷");
+		}else{
+			//锟斤拷锟斤拷锟轿拷锟�
+			resultInfo.setCode(1);
+			resultInfo.setResult(list);
+		}
+		
+		return resultInfo;
+	}
+	/*
+	 * 删锟斤拷指锟斤拷锟斤拷址
+	 */
+	public ResultInfo<Address> deleteAddress(String aid) {
+		ResultInfo<Address> resultInfo = new ResultInfo<>();
+		if(StringUtil.isEmpty(aid)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟斤拷址锟斤拷锟斤拷锟斤拷,锟斤拷锟斤拷锟斤拷!!");
+			return resultInfo;
+		}
+		int row=addressDao.deleteAddress(aid);
+		if(row>0){
+			resultInfo.setCode(1);
+			
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("删锟斤拷失锟斤拷!");
+		}
+		return resultInfo;
+	}
+	/*
+	 * 锟斤拷证锟斤拷址唯一
+	 */
+	public ResultInfo<Address> checkaddress(  Integer uid,String address,String aid) {
+		ResultInfo<Address> resultInfo=new ResultInfo<>();
+		if(StringUtil.isEmpty(address)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟斤拷址锟斤拷锟斤拷为锟斤拷!!");
+			return resultInfo;
+		}
+		
+		Address notetype=addressDao.checkaddress(address,uid,aid);
+		if(notetype==null){
+			resultInfo.setCode(1);
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟窖达拷锟节此碉拷址!!");
+		}
+		
+		return resultInfo;
+	}
+	/*
+	 * 锟斤拷踊锟斤拷薷锟�
+	 */
+	public ResultInfo<Address> addorupdate(String address, String aid, String isdefault, Integer uid) {
+		ResultInfo<Address> resultInfo=new ResultInfo<>();
+		if(StringUtil.isEmpty(address)){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟斤拷址锟斤拷锟斤拷为锟斤拷!");
+			return resultInfo;
+		}
+		//锟斤拷证锟斤拷址唯一
+		ResultInfo<Address> res=checkaddress(uid,address,aid);
+		if(res.getCode()== 0){
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟斤拷址锟斤拷锟斤拷锟截革拷");
+			return resultInfo;
+		}
+		//锟斤拷锟斤拷Dao锟姐方锟斤拷
+		int row=addressDao.addorupdate(address,aid,isdefault,uid);
+		//锟叫讹拷锟斤拷影锟斤拷锟斤拷锟斤拷锟�
+		if(row>0){
+			resultInfo.setCode(1);
+			if(StringUtil.isEmpty(aid)){
+				Address note=addressDao.checkaddress(address,uid ,aid);
+				resultInfo.setResult(note);
+			}
+		}else{
+			resultInfo.setCode(0);
+			resultInfo.setMsg("锟斤拷址锟斤拷锟斤拷失锟斤拷");
+		}
+		return resultInfo;
+	}
+
+
+}

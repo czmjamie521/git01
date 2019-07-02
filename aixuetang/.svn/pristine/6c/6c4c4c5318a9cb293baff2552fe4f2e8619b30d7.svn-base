@@ -1,0 +1,32 @@
+package com.sxt.order.service;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import com.sxt.order.dao.OrderDao;
+import com.sxt.order.domain.Order;
+
+public class OrderService {
+	private OrderDao orderDao =new OrderDao();
+
+	//查询当前用户总的订单数
+	public long getTotalCount(Integer uid) {
+		try {
+			return orderDao.getTotalCount(uid);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	//查询出订单一览表, 不需要详细的 OrderItem, 但是需要和 t_address连表查地址
+	public List<Order> showOrder(Integer uid, Integer pageNum, Integer pageSize) {
+		try {
+			List<Order> orderList;
+			orderList = orderDao.showOrder(uid, pageNum, pageSize);
+			return orderList;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+}

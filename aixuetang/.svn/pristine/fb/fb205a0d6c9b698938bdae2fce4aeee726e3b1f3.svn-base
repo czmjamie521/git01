@@ -1,0 +1,7 @@
+package com.sxt.model;
+
+public class ShowTag {
+	private Integer tagid;
+	private Integer count;
+	private String tagname;
+}

@@ -1,0 +1,41 @@
+package com.sxt.service;
+
+import com.sxt.Dao.CommentDao;
+import com.sxt.Dao.Dao;
+import com.sxt.comment.CourseComment;
+import com.sxt.util.ResultInfo;
+import com.sxt.util.User;
+
+public class CommentService {
+	CommentDao CommentDao=new CommentDao();
+
+	public ResultInfo <CourseComment> addComment(String comment, String commentid, User user, String courseid, String commentid1) {
+		ResultInfo <CourseComment> ResultInfo=new  ResultInfo();
+		if(comment==null){
+			ResultInfo.setCode(0);
+			ResultInfo.setMsg("评论不能为空");
+			return ResultInfo;
+		}
+		/*if(user==null){
+			ResultInfo.setCode(0);
+			ResultInfo.setMsg("网络波动,请重试");
+			return ResultInfo;
+		}*/
+		int row=CommentDao.addComment(comment,commentid,user,courseid,commentid1);
+		if(row<1){
+			ResultInfo.setCode(0);
+			ResultInfo.setMsg("网络波动,请重试");
+			return ResultInfo;
+		}
+		CourseComment CourseComment=CommentDao.searchComment(comment,commentid,user,courseid,commentid1);		
+		if(CourseComment==null){
+			ResultInfo.setCode(0);
+			ResultInfo.setMsg("网络波动,请重试");	
+			return ResultInfo;
+		}
+		ResultInfo.setCode(1);
+		ResultInfo.setMsg("");
+		ResultInfo.setResult(CourseComment);
+		return ResultInfo;
+	}
+}

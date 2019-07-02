@@ -1,0 +1,69 @@
+package com.sxt.order.service;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import com.sxt.cartitem.dao.CartDao;
+import com.sxt.order.dao.OrderDao;
+import com.sxt.order.domain.Order;
+
+import cn.itcast.jdbc.JdbcUtils;
+
+public class OrderService {
+	private OrderDao orderDao =new OrderDao();
+	private CartDao cartDao =new CartDao();
+
+	//查询当前用户总的订单数
+	public long getTotalCount(Integer uid) {
+		try {
+			return orderDao.getTotalCount(uid);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	//查询出订单一览表, 不需要详细的 OrderItem, 但是需要和 t_address连表查地址
+	public List<Order> showOrder(Integer uid, Integer pageNum, Integer pageSize) {
+		try {
+			List<Order> orderList;
+			orderList = orderDao.showOrder(uid, pageNum, pageSize);
+			return orderList;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+		
+	}
+
+	/**
+	 * 使用事务, 完成
+	 * 1. 在t_order 中创建新的order记录
+	 * 2. 在t_OrderItem 中插入多条记录
+	 * 3. 在t_cartitem中删除多条记录
+	 * @param order		servlet封装的order 对象, 包含完整的 List<OrderItem>
+	 * @param cartItemIds 	CartItem 主键数组, toString()得到
+	 * @param uid 
+	 */
+	public void addOrder(Order order, String cartItemIds, Integer uid) {
+		try {
+			//开启事务
+			JdbcUtils.beginTransaction();
+			//创建Order记录, 暂时缺省 aid(地址id)
+			orderDao.createOrder(order.getOrderid(), uid, order.getOrdertime(), null,
+					order.getStatus(),order.getTotal());
+			orderDao.addOrderItems(order);
+			//删除响应的CartItem
+			cartDao.cartdelete(cartItemIds);
+			
+			//关闭事务
+			JdbcUtils.commitTransaction();
+		} catch (SQLException e) {
+			try {
+				//回滚事务
+				JdbcUtils.rollbackTransaction();
+			} catch (SQLException e1) {
+			}
+			throw new RuntimeException(e);
+		}
+		
+	}
+}

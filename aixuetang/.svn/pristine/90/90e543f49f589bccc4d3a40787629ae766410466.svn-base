@@ -1,0 +1,31 @@
+//取消按钮回到首页
+function Deselect(){
+	window.location.href="mainweb.jsp"
+}
+function pay(){
+	var money=$("#money").val()
+	if(isEmpty(money)){
+		$("#msg").val("金额不能为空");
+	}
+	
+	$.ajax({
+		type:"post",
+		url:"userservlet",
+		data:{
+			money:money,
+			actionName:"paying"
+		},
+		success:function(result){
+			if(result.code==1){
+				$("#msg").html(result.msg);
+				return;
+			}else{
+				$("#msg").html(result.msg);
+				return;
+			}
+		}
+	
+			
+	})
+	
+}

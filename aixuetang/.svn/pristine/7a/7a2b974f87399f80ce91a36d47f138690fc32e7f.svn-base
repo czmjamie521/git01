@@ -1,0 +1,50 @@
+package com.sxt.Dao;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import com.sxt.comment.CourseComment;
+import com.sxt.model.BaseDao;
+import com.sxt.util.User;
+
+import cn.itcast.commons.CommonUtils;
+
+public class CommentDao {
+
+	public int addComment(String comment, String commentid, User user, String courseid) {
+		String sql="insert into t_comment(commentid,content,uid,parentcomment,courseid) values (?,?,?,?,?) ";
+		List<Object> params=new ArrayList<>();
+		
+		if(commentid==null){
+			params.add(12);
+		}else{
+			params.add(1);
+		}
+		
+		params.add(comment);
+		params.add(1);
+		if(commentid!=null){
+			params.add(1);
+		}else{
+			params.add(null);
+		}
+		params.add(1);
+		
+		int row=BaseDao.executeUpdate(sql, params);
+		
+		return row;
+	}
+
+	public CourseComment searchComment(String comment, String commentid, User user, String courseid) {
+		String sql="select commentid,content,uid,publishtime,parentcomment,courseid from t_comment where parentcomment=?";
+		List<Object> params=new ArrayList<>();
+		params.add(commentid);
+		params.add(commentid);
+		List<CourseComment> list=(List<CourseComment>) BaseDao.queryRows(sql, params, CourseComment.class);
+		CourseComment CourseComment=list.get(list.size()-1);
+		return CourseComment;
+	}
+
+}

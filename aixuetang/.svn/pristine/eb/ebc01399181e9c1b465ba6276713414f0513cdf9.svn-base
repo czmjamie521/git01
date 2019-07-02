@@ -1,0 +1,75 @@
+function commentSubmit(courseid){
+	var  comment=$("#enterreview").val();
+	if(comment==null){
+		$("#warn").val("评论不能为空");
+		return;
+	}
+	$.ajax({
+	type:"post",
+	url:"commentservlet",
+	data:{
+		actionName:"commentSubmit",
+		comment:comment,
+		courseid:courseid
+	},
+		success:function(result){
+			if(result.code!=1){
+				$("#warn").val(result.msg);
+			}else{
+				var div= "<div class='media'>";
+				div +="<img class='mr-3' src='statics/img/tutor/"+result.result.head+"'alt=''>";
+				div +=" <div class='media-body'> "
+					div +=" <h5 class='mt-0'>"+result.result.uname +"</h5>";
+					div +="<fmt:formatDate value="+result.result.publishtime+" pattern='yyyy-MM-dd hh-mm' var=''myDate'/>";
+					div +="<span class='date'>${myDate}</span>";
+					
+					div +=" <p>"+result.result.content+"</p> </div> </div>";
+				$("#review").prepend(div);
+				
+			}
+			
+		}
+
+	})
+}
+	function addcommentSubmit(commentid,courseid){
+		var a=$("#pinjia1").val();
+		$("#myModal").modal("show");
+		var  comment=$("#enterreview").val();
+		
+		console.log('ss');
+		if(comment==null){
+			$("#warn").val("评论不能为空");
+			return;
+		}
+		$.ajax({
+		type:"post",
+		url:"commentservlet",
+		data:{
+			actionName:"commentSubmit",
+			comment:comment,
+			courseid:courseid,
+			commentid:commentid
+		},
+			success:function(result){
+				if(result.code!=1){
+					$("#warn").val(result.msg);
+				}else{
+					$("#pinjia1").val(a+1);
+					var div= "<div class='media'>";
+					div +="<img class='mr-3' src='statics/img/tutor/"+result.result.head+"'alt=''>";
+					div +=" <div class='media-body'> "
+						div +=" <h5 class='mt-0'>"+result.result.uname +"</h5>";
+						div +="<fmt:formatDate value="+result.result.publishtime+" pattern='yyyy-MM-dd hh-mm' var=''myDate'/>";
+						div +="<span class='date'>${myDate}</span>";
+						
+						div +=" <p>"+result.result.content+"</p> </div> </div>";
+					$("#review").prepend(div);
+					
+				}
+				
+			}
+	
+	
+})
+}

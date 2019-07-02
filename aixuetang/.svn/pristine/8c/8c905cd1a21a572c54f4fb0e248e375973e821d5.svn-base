@@ -1,0 +1,92 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+    <!-- Hero Slider -->
+        <div class="hero-slider2 owl-carousel owl-theme owl-theme-2">
+            <div class="hero-slider-item item-bg-1">
+                <div class="d-table">
+                    <div class="d-tablecell">
+                        <div class="hero-slider-text">
+                            <span class="welcome-text">Welcome To</span>
+                            <h1>Education Template</h1>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud.</p>
+
+                            <div class="slider-btn">
+                                <a href="about-us.html" class="default-btn white-btn mr-15">About Us</a>
+                                <a href="register.html" class="default-btn pink-bg">Apply Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hero-slider-item item-bg-2">
+                <div class="d-table">
+                    <div class="d-tablecell">
+                        <div class="hero-slider-text hst-text-center">
+                            <span class="welcome-text">Welcome To</span>
+                            <h1>Education Template</h1>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud.</p>
+
+                            <div class="slider-btn">
+                                <a href="about-us.html" class="default-btn white-btn mr-15">About Us</a>
+                                <a href="register.html" class="default-btn pink-bg">Apply Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hero-slider-item item-bg-3">
+                <div class="d-table">
+                    <div class="d-tablecell">
+                        <div class="hero-slider-text">
+                            <span class="welcome-text">Welcome To</span>
+                            <h1>Education Template</h1>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud.</p>
+
+                            <div class="slider-btn">
+                                <a href="about-us.html" class="default-btn mr-15">About Us</a>
+                                <a href="register.html" class="default-btn white-btn pink-bg">Apply Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Hero Slider -->
+
+        <!-- About Us -->
+        <section class="about-us-area ptb-100">
+            <div class="container"> 
+                <div class="row"> 
+                    <div class="col-md-6 col-lg-6"> 
+                        <div class="about-video-intro">
+                            <div class="d-table"> 
+                                <div class="d-tablecell">
+                                    <div class="sonar-wrapper">
+                                        <div class="sonar-emitter" data-tilt>
+                                            <a href="https://www.youtube.com/watch?v=bk7McNUjWgw" class="play-icon popup-youtube">
+                                                <i class="icofont-play"></i>
+                                            </a>
+                                            <div class="sonar-wave"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-6"> 
+                        <div class="about-us-text pt-50">
+                            <h4>Welcome To Education</h4>
+                            <h2>50 Years of Experience in Education</h2>
+                            <h5>We are ready to build your dream future Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolorum, beatae.</h5>
+                            
+                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                            
+                            <a href="about-us.html" class="default-btn">About Us</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- End About Us -->

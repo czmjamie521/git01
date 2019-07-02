@@ -1,0 +1,29 @@
+package com.aixuetang.service;
+
+import java.util.List;
+
+import com.aixuetang.dao.TeacherDao;
+import com.aixuetang.po.Course;
+import com.aixuetang.po.vo.ResultInfo;
+
+public class Teacherservcice {
+	
+	TeacherDao dao=new TeacherDao();
+	public ResultInfo<List<Course>> findcourse(String teacherid) {
+		//
+		ResultInfo<List<Course>> info=new ResultInfo<>();
+		List<Course> list=dao.findcoursebyid(teacherid);
+		//该教师无课程信息
+		if(list.size()==0){
+			info.setCode(0);
+			info.setMsg("无课程信息！");
+			return info;
+			
+		}
+		//查询到课程信息
+		info.setResult(list);
+		info.setCode(1);
+		return info;
+	}
+	
+}
